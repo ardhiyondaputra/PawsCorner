@@ -1,4 +1,4 @@
-package kelompok4.uasmobile2.pawscorner.ui.theme.screens
+package kelompok4.uasmobile2.pawscorner.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -21,9 +21,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import kelompok4.uasmobile2.pawscorner.R
+import kelompok4.uasmobile2.pawscorner.viewmodel.LoginViewModel
 
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun HomeScreen(navController: NavHostController, loginViewModel: LoginViewModel) {
     val scrollState = rememberScrollState()
     var searchText by remember { mutableStateOf("") }
     val selectedItem = remember { mutableStateOf("Home") }
@@ -44,7 +45,7 @@ fun HomeScreen(navController: NavHostController) {
                                     // navController.navigate("notification_route")
                                 }
                                 "Profil" -> {
-                                    // navController.navigate("profile_route")
+                                    navController.navigate("profile")
                                 }
                             }
                         },
@@ -63,16 +64,44 @@ fun HomeScreen(navController: NavHostController) {
             }
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(scrollState)
+        // Jika user pilih profil, tampilkan ProfileScreen
+        if (selectedItem.value == "Profil") {
+            ProfileScreen(navController, loginViewModel)
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(scrollState)
+            ) {
+                HeaderSection(searchText) { searchText = it }
+                CategorySection()
+                RecommendedSection()
+                Spacer(modifier = Modifier.height(60.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun ProfileScreen(navController: NavHostController, loginViewModel: LoginViewModel) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Button(
+            onClick = {
+                loginViewModel.logout()  // panggil fungsi logout di viewmodel
+                navController.navigate("login") {
+                    popUpTo(0) { inclusive = true } // supaya backstack dihapus
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
         ) {
-            HeaderSection(searchText) { searchText = it }
-            CategorySection()
-            RecommendedSection()
-            Spacer(modifier = Modifier.height(60.dp))
+            Text(text = "Logout")
         }
     }
 }

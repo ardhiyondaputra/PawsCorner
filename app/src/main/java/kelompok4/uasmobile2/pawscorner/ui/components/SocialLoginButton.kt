@@ -1,4 +1,4 @@
-package kelompok4.uasmobile2.pawscorner.ui.theme.components
+package kelompok4.uasmobile2.pawscorner.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

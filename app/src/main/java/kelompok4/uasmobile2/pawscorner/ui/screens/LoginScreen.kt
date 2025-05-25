@@ -1,76 +1,57 @@
-package kelompok4.uasmobile2.pawscorner.ui.theme.screens
+package kelompok4.uasmobile2.pawscorner.ui.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import kelompok4.uasmobile2.pawscorner.R
-import kelompok4.uasmobile2.pawscorner.ui.theme.components.SocialLoginButton
+import kelompok4.uasmobile2.pawscorner.viewmodel.LoginViewModel
 
 @Composable
-fun RegisterScreen(navController: NavController) {
-    var username by remember { mutableStateOf("") }
+fun LoginScreen(
+    navController: NavHostController,
+    loginViewModel: LoginViewModel // ⬅️ Tambahkan parameter ViewModel
+) {
     var email by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var rememberMe by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Image(
             painter = painterResource(id = R.drawable.paws_corner_removebg_preview),
             contentDescription = "Logo",
-            modifier = Modifier
-                .height(80.dp)
-                .padding(top = 16.dp)
+            modifier = Modifier.size(120.dp)
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text("Daftar", fontSize = 28.sp, fontWeight = FontWeight.Bold)
-        Text("Buat Akun untuk Memulai!", fontSize = 16.sp, color = Color.Gray)
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        OutlinedTextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text("Nama Pengguna") },
-            modifier = Modifier.fillMaxWidth()
-        )
+        Text("Masuk", fontSize = 28.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text("Masukkan Email dan Password Anda", fontSize = 14.sp, color = Color.Gray)
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = phone,
-            onValueChange = { phone = it },
-            label = { Text("Nomor Telepon") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -80,25 +61,48 @@ fun RegisterScreen(navController: NavController) {
             value = password,
             onValueChange = { password = it },
             label = { Text("Password") },
-            visualTransformation = PasswordVisualTransformation(),
+            singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        Button(
-            onClick = {navController.navigate("login")},
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107)) // Kuning
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Daftar")
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = rememberMe, onCheckedChange = { rememberMe = it })
+                Text("Ingat saya")
+            }
+            ClickableText(
+                text = AnnotatedString("Lupa Kata Sandi ?"),
+                onClick = { /* TODO */ },
+                style = LocalTextStyle.current.copy(color = Color(0xFF2D5FFF))
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text("Atau")
+        Button(
+            onClick = {
+                // ✅ Simpan status login
+                loginViewModel.login()
+                // ✅ Navigasi ke home
+                navController.navigate("home") {
+                    popUpTo("login") { inclusive = true } // Hilangkan login dari backstack
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5DD39E))
+        ) {
+            Text("Masuk", color = Color.White)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text("Atau", color = Color.Gray)
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -115,10 +119,7 @@ fun RegisterScreen(navController: NavController) {
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Masuk dengan Google",
-                color = Color.Black
-            )
+            Text(text = "Masuk dengan Google", color = Color.Black)
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -136,22 +137,18 @@ fun RegisterScreen(navController: NavController) {
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Daftar dengan Facebook",
-                color = Color.Black
-            )
+            Text(text = "Masuk dengan Facebook", color = Color.Black)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row {
-            Text("Sudah punya akun? ")
-            Text(
-                "Masuk",
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.clickable {
-                    navController.navigate("login")
-                }
+        Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
+            Text("Belum punya akun?")
+            Spacer(modifier = Modifier.width(4.dp))
+            ClickableText(
+                text = AnnotatedString("Daftar"),
+                onClick = { navController.navigate("register") },
+                style = LocalTextStyle.current.copy(color = Color(0xFF2D5FFF))
             )
         }
     }
