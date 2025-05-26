@@ -1,6 +1,6 @@
 # **UAS Pemrograman Mobile II**
 **Kelompok 4**
-**PawsCorner - Aplikasi Petshop**
+**(PawsCorner - Aplikasi Petshop)**
 
 ##  Anggota Kelompok 4
 
