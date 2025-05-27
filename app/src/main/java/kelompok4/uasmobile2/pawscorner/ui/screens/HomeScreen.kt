@@ -75,8 +75,8 @@ fun HomeScreen(navController: NavHostController, loginViewModel: LoginViewModel)
                     .verticalScroll(scrollState)
             ) {
                 HeaderSection(searchText) { searchText = it }
-                CategorySection()
-                RecommendedSection()
+                /*CategorySection()*/
+                /*RecommendedSection()*/
                 Spacer(modifier = Modifier.height(60.dp))
             }
         }
@@ -185,7 +185,7 @@ fun HeaderSection(searchText: String, onSearchChange: (String) -> Unit) {
     }
 }
 
-@Composable
+/*@Composable
 fun CategorySection() {
     val categories = listOf(
         Pair("Makanan", R.drawable.fish),
@@ -217,7 +217,7 @@ fun CategorySection() {
 @Composable
 fun RecommendedSection() {
     Text(
-        text = "Recommended Food",
+        text = "Recommended Product",
         fontWeight = FontWeight.Bold,
         fontSize = 16.sp,
         modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
@@ -256,7 +256,7 @@ fun RecommendedSection() {
                     Text(text = weight, fontSize = 11.sp)
                     Spacer(modifier = Modifier.height(4.dp))
                     Button(
-                        onClick = { /* TODO: Tambahkan ke keranjang */ },
+                        onClick = { *//* TODO: Tambahkan ke keranjang *//* },
                         modifier = Modifier.fillMaxWidth(),
                         contentPadding = PaddingValues(vertical = 4.dp)
                     ) {
@@ -272,4 +272,5 @@ fun RecommendedSection() {
             }
         }
     }
-}
+}*/
+
