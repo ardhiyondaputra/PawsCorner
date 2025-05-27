@@ -20,7 +20,7 @@ import kelompok4.uasmobile2.pawscorner.viewmodel.LoginViewModel
 @Composable
 fun LoginScreen(
     navController: NavHostController,
-    loginViewModel: LoginViewModel // ⬅️ Tambahkan parameter ViewModel
+    loginViewModel: LoginViewModel
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -87,11 +87,9 @@ fun LoginScreen(
 
         Button(
             onClick = {
-                // ✅ Simpan status login
                 loginViewModel.login()
-                // ✅ Navigasi ke home
                 navController.navigate("home") {
-                    popUpTo("login") { inclusive = true } // Hilangkan login dari backstack
+                    popUpTo("login") { inclusive = true }
                 }
             },
             modifier = Modifier.fillMaxWidth(),

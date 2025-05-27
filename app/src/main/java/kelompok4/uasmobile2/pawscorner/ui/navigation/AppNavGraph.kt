@@ -33,7 +33,7 @@ fun AppNavGraph(
             RegisterScreen(navController = navController)
         }
         composable("home") {
-            HomeScreen(navController = navController, loginViewModel = loginViewModel)
+            HomeScreen(navController = navController)
         }
         composable("profile") {
             val profileViewModel: ProfileViewModel = viewModel(
