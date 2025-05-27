@@ -34,14 +34,14 @@ class MainActivity : ComponentActivity() {
                     factory = LoginViewModelFactory(userPreferences)
                 )
 
-                MainApp(loginViewModel) // ✅ Ganti dari AppNavGraph ke MainApp
+                MainApp(loginViewModel, userPreferences)
             }
         }
     }
 }
 
 @Composable
-fun MainApp(loginViewModel: LoginViewModel) {
+fun MainApp(loginViewModel: LoginViewModel, userPreferences: UserPreferences) {
     val navController = rememberNavController()
     val isLoggedIn by loginViewModel.isLoggedIn.collectAsState()
     var showSplash by remember { mutableStateOf(true) }
@@ -58,7 +58,8 @@ fun MainApp(loginViewModel: LoginViewModel) {
         AppNavGraph(
             navController = navController,
             loginViewModel = loginViewModel,
-            startDestination = startDest
+            startDestination = startDest,
+            userPreferences = userPreferences
         )
     }
 }

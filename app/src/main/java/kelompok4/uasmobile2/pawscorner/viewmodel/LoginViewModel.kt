@@ -19,6 +19,10 @@ class LoginViewModel(private val userPreferences: UserPreferences) : ViewModel()
             false
         )
 
+    // Tambahkan ini:
+    val userName = userPreferences.userName
+    val userEmail = userPreferences.userEmail
+
     // Fungsi untuk menyimpan status login
     fun login() {
         viewModelScope.launch {

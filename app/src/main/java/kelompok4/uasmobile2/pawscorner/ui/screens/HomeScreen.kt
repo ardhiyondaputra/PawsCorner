@@ -64,44 +64,16 @@ fun HomeScreen(navController: NavHostController, loginViewModel: LoginViewModel)
             }
         }
     ) { innerPadding ->
-        // Jika user pilih profil, tampilkan ProfileScreen
-        if (selectedItem.value == "Profil") {
-            ProfileScreen(navController, loginViewModel)
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .verticalScroll(scrollState)
-            ) {
-                HeaderSection(searchText) { searchText = it }
-                CategorySection()
-                RecommendedSection()
-                Spacer(modifier = Modifier.height(60.dp))
-            }
-        }
-    }
-}
-
-@Composable
-fun ProfileScreen(navController: NavHostController, loginViewModel: LoginViewModel) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Button(
-            onClick = {
-                loginViewModel.logout()  // panggil fungsi logout di viewmodel
-                navController.navigate("login") {
-                    popUpTo(0) { inclusive = true } // supaya backstack dihapus
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .verticalScroll(scrollState)
         ) {
-            Text(text = "Logout")
+            HeaderSection(searchText) { searchText = it }
+            CategorySection()
+            RecommendedSection()
+            Spacer(modifier = Modifier.height(60.dp))
         }
     }
 }

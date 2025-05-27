@@ -1,5 +1,6 @@
 package kelompok4.uasmobile2.pawscorner.ui.screens
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -17,7 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kelompok4.uasmobile2.pawscorner.R
-import kelompok4.uasmobile2.pawscorner.ui.components.SocialLoginButton
+import kelompok4.uasmobile2.pawscorner.data.UserPreferences
+import kotlinx.coroutines.launch
 
 @Composable
 fun RegisterScreen(navController: NavController) {
@@ -25,6 +28,10 @@ fun RegisterScreen(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val userPreferences = remember { UserPreferences(context) }
 
     Column(
         modifier = Modifier
@@ -87,11 +94,17 @@ fun RegisterScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = {navController.navigate("login")},
+            onClick = {
+                scope.launch {
+                    userPreferences.setUserData(username, email, phone, password)
+                    userPreferences.setLoggedIn(true)
+                }
+                navController.navigate("login")
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107)) // Kuning
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))
         ) {
             Text("Daftar")
         }
@@ -156,3 +169,4 @@ fun RegisterScreen(navController: NavController) {
         }
     }
 }
+
