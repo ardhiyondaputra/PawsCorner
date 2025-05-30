@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import kelompok4.uasmobile2.pawscorner.R
+import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
 
 data class Product(
     val title: String,
@@ -29,7 +30,10 @@ data class Product(
 )
 
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun HomeScreen(
+    navController: NavHostController,
+    authViewModel: AuthViewModel
+) {
     val scrollState = rememberScrollState()
     var searchText by remember { mutableStateOf("") }
     val selectedItem = remember { mutableStateOf("Home") }

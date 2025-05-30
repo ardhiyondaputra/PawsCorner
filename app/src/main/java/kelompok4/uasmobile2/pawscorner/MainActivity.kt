@@ -1,7 +1,7 @@
 package kelompok4.uasmobile2.pawscorner
 
 import android.os.Bundle
-import android.window.SplashScreen
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -17,49 +17,100 @@ import kelompok4.uasmobile2.pawscorner.ui.theme.PawsCornerTheme
 import kelompok4.uasmobile2.pawscorner.ui.navigation.AppNavGraph
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kelompok4.uasmobile2.pawscorner.data.UserPreferences
-import kelompok4.uasmobile2.pawscorner.viewmodel.LoginViewModel
-import kelompok4.uasmobile2.pawscorner.viewmodel.LoginViewModelFactory
+import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
+import kelompok4.uasmobile2.pawscorner.viewmodel.AuthState
 import kelompok4.uasmobile2.pawscorner.ui.screens.SplashScreen
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        private const val TAG = "MainActivity"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Initialize Firebase
+        try {
+            FirebaseApp.initializeApp(this)
+            Log.d(TAG, "Firebase initialized successfully")
+
+            // Check Firebase Auth instance
+            val auth = FirebaseAuth.getInstance()
+            Log.d(TAG, "Firebase Auth instance: ${auth != null}")
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Firebase initialization failed", e)
+        }
 
         val userPreferences = UserPreferences(applicationContext)
 
         setContent {
             PawsCornerTheme {
-                val loginViewModel: LoginViewModel = viewModel(
-                    factory = LoginViewModelFactory(userPreferences)
-                )
+                val authViewModel: AuthViewModel = viewModel()
 
-                MainApp(loginViewModel, userPreferences)
+                MainApp(authViewModel, userPreferences)
             }
         }
     }
 }
 
 @Composable
-fun MainApp(loginViewModel: LoginViewModel, userPreferences: UserPreferences) {
+fun MainApp(authViewModel: AuthViewModel, userPreferences: UserPreferences) {
     val navController = rememberNavController()
-    val isLoggedIn by loginViewModel.isLoggedIn.collectAsState()
+    val authState by authViewModel.authState.collectAsState()
     var showSplash by remember { mutableStateOf(true) }
+    var isLoading by remember { mutableStateOf(true) }
 
+    // Splash screen dengan loading state
     LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(2000)
-        showSplash = false
+        try {
+            // Check current user status
+            authViewModel.checkAuthState()
+            kotlinx.coroutines.delay(2000) // Splash duration
+            showSplash = false
+            isLoading = false
+        } catch (e: Exception) {
+            Log.e("MainApp", "Error during initialization", e)
+            showSplash = false
+            isLoading = false
+        }
     }
 
-    if (showSplash) {
-        SplashScreen()
-    } else {
-        val startDest = if (isLoggedIn) "home" else "login"
-        AppNavGraph(
-            navController = navController,
-            loginViewModel = loginViewModel,
-            startDestination = startDest,
-            userPreferences = userPreferences
-        )
+    when {
+        showSplash -> {
+            SplashScreen()
+        }
+        isLoading -> {
+            // Optional: Loading screen setelah splash
+            SplashScreen() // atau buat LoadingScreen() terpisah
+        }
+        else -> {
+            // Tentukan start destination berdasarkan auth state
+            val startDest = when (authState) {
+                is AuthState.Success -> {
+                    Log.d("MainApp", "User authenticated, navigating to home")
+                    "home"
+                }
+                is AuthState.Error -> {
+                    Log.d("MainApp", "Auth error: ${(authState as AuthState.Error).message}")
+                    "login"
+                }
+                else -> {
+                    Log.d("MainApp", "No auth state, navigating to login")
+                    "login"
+                }
+            }
+
+            AppNavGraph(
+                navController = navController,
+                authViewModel = authViewModel,
+                startDestination = startDest,
+                userPreferences = userPreferences
+            )
+        }
     }
 }

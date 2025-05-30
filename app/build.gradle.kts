@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -40,8 +41,20 @@ android {
 }
 
 dependencies {
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
+
+    implementation ("com.google.firebase:firebase-dynamic-links-ktx")
+
+    // DataStore & ViewModel
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+
+    // Firebase BoM - Update ke versi terbaru untuk menghindari konflik
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+
+    // Firebase dependencies (tanpa versi - diatur oleh BOM)
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-database-ktx")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

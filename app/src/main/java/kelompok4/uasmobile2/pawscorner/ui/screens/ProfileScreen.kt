@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import kelompok4.uasmobile2.pawscorner.R
+import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
 import kelompok4.uasmobile2.pawscorner.viewmodel.LoginViewModel
 import kelompok4.uasmobile2.pawscorner.viewmodel.ProfileViewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -24,7 +25,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun ProfileScreen(
     navController: NavHostController,
-    loginViewModel: LoginViewModel,
+    authViewModel: AuthViewModel,
     profileViewModel: ProfileViewModel
 ) {
     val scope = rememberCoroutineScope()
@@ -121,7 +122,7 @@ fun ProfileScreen(
             ProfileOption(icon = R.drawable.paws_corner_removebg_preview, title = "Alamat Anda", desc = "Alamat paket anda") {}
             ProfileOption(icon = R.drawable.paws_corner_removebg_preview, title = "Status Pesanan", desc = "") {}
             ProfileOption(icon = R.drawable.paws_corner_removebg_preview, title = "Log out", desc = "Further secure your account for safety") {
-                loginViewModel.logout()
+                authViewModel.logout()
                 navController.navigate("login") {
                     popUpTo(0)
                 }

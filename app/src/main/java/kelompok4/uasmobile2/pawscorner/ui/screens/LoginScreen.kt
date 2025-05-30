@@ -15,139 +15,129 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import kelompok4.uasmobile2.pawscorner.R
-import kelompok4.uasmobile2.pawscorner.viewmodel.LoginViewModel
+import kelompok4.uasmobile2.pawscorner.viewmodel.AuthState
+import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
 
 @Composable
 fun LoginScreen(
     navController: NavHostController,
-    loginViewModel: LoginViewModel
+    authViewModel: AuthViewModel
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.paws_corner_removebg_preview),
-            contentDescription = "Logo",
-            modifier = Modifier.size(120.dp)
-        )
+    val snackbarHostState = remember { SnackbarHostState() }
+    val authState by authViewModel.authState.collectAsState()
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text("Masuk", fontSize = 28.sp, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(8.dp))
-        Text("Masukkan Email dan Password Anda", fontSize = 14.sp, color = Color.Gray)
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(checked = rememberMe, onCheckedChange = { rememberMe = it })
-                Text("Ingat saya")
-            }
-            ClickableText(
-                text = AnnotatedString("Lupa Kata Sandi ?"),
-                onClick = { /* TODO */ },
-                style = LocalTextStyle.current.copy(color = Color(0xFF2D5FFF))
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                loginViewModel.login()
-                navController.navigate("home") {
-                    popUpTo("login") { inclusive = true }
+    LaunchedEffect(authState) {
+        when (authState) {
+            is AuthState.Success -> {
+                navController.navigate(route = "home") {
+                    popUpTo(route = "login") { inclusive = true }
                 }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5DD39E))
-        ) {
-            Text("Masuk", color = Color.White)
+            }
+            is AuthState.Error -> {
+                snackbarHostState.showSnackbar((authState as AuthState.Error).message)
+            }
+            is AuthState.EmailNotVerified -> {
+                snackbarHostState.showSnackbar("Email belum diverifikasi. Silakan cek email Anda.")
+            }
+            else -> {}
         }
+    }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text("Atau", color = Color.Gray)
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = { /* TODO */ },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-            border = ButtonDefaults.outlinedButtonBorder
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp)
+                .padding(padding),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.search),
-                contentDescription = "Google Logo",
-                tint = Color.Unspecified,
-                modifier = Modifier.size(20.dp)
+            Image(
+                painter = painterResource(id = R.drawable.paws_corner_removebg_preview),
+                contentDescription = "Logo",
+                modifier = Modifier.size(120.dp)
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(text = "Masuk dengan Google", color = Color.Black)
-        }
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        Button(
-            onClick = { /* TODO */ },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-            border = ButtonDefaults.outlinedButtonBorder
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.facebook),
-                contentDescription = "Facebook Logo",
-                tint = Color.Unspecified,
-                modifier = Modifier.size(20.dp)
+            Text("Masuk", fontSize = 28.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Masukkan Email dan Password Anda", fontSize = 14.sp, color = Color.Gray)
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(text = "Masuk dengan Facebook", color = Color.Black)
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-        Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
-            Text("Belum punya akun?")
-            Spacer(modifier = Modifier.width(4.dp))
-            ClickableText(
-                text = AnnotatedString("Daftar"),
-                onClick = { navController.navigate("register") },
-                style = LocalTextStyle.current.copy(color = Color(0xFF2D5FFF))
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = rememberMe, onCheckedChange = { rememberMe = it })
+                    Text("Ingat saya")
+                }
+                ClickableText(
+                    text = AnnotatedString("Lupa Kata Sandi ?"),
+                    onClick = { /* TODO */ },
+                    style = LocalTextStyle.current.copy(color = Color(0xFF2D5FFF))
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = {
+                    authViewModel.login(email, password)
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5DD39E))
+            ) {
+                Text("Masuk", color = Color.White)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text("Atau", color = Color.Gray)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Google & Facebook Buttons (tidak diubah)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
+                Text("Belum punya akun?")
+                Spacer(modifier = Modifier.width(4.dp))
+                ClickableText(
+                    text = AnnotatedString("Daftar"),
+                    onClick = { navController.navigate("register") },
+                    style = LocalTextStyle.current.copy(color = Color(0xFF2D5FFF))
+                )
+            }
         }
     }
 }
