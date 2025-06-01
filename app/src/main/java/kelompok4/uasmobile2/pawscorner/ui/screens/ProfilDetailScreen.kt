@@ -1,12 +1,10 @@
 package kelompok4.uasmobile2.pawscorner.ui.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -19,6 +17,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import kelompok4.uasmobile2.pawscorner.R
 import kelompok4.uasmobile2.pawscorner.viewmodel.ProfileViewModel
@@ -26,12 +25,12 @@ import kelompok4.uasmobile2.pawscorner.viewmodel.ProfileViewModel
 @Composable
 fun ProfileDetailScreen(
     navController: NavController,
-    profileViewModel: ProfileViewModel
+    profileViewModel: ProfileViewModel = viewModel()
 ) {
     val name by profileViewModel.userName.collectAsState()
     val email by profileViewModel.userEmail.collectAsState()
     val phone by profileViewModel.userPhone.collectAsState()
-    val password by profileViewModel.userPassword.collectAsState()
+    //val password by profileViewModel.userPassword.collectAsState()
 
     Column(
         modifier = Modifier
@@ -41,18 +40,18 @@ fun ProfileDetailScreen(
     ) {
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Header dengan tombol kembali dan judul di tengah
+        // Header dengan tombol kembali dan judul
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = 16.dp, top = 35.dp)
         ) {
             IconButton(
-                onClick = { navController.popBackStack() },
+                onClick = { navController.navigate("profile") },
                 modifier = Modifier.align(Alignment.CenterStart)
             ) {
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Kembali"
                 )
             }
@@ -61,7 +60,8 @@ fun ProfileDetailScreen(
                 text = "Akun Saya",
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 20.sp,
-                modifier = Modifier.align(Alignment.Center)
+                modifier = Modifier
+                    .align(Alignment.Center)
             )
         }
 
@@ -82,7 +82,7 @@ fun ProfileDetailScreen(
 
         ProfileDataLabel(label = "Nama Pengguna", value = name)
         ProfileDataLabel(label = "Email", value = email)
-        ProfileDataLabel(label = "Password", value = password)
+        //ProfileDataLabel(label = "Password", value = password)
         ProfileDataLabel(label = "Nomor Telepon", value = phone, withFlag = true)
 
         Spacer(modifier = Modifier.height(32.dp))

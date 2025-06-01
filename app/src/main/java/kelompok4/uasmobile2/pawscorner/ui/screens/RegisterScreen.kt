@@ -1,6 +1,5 @@
 package kelompok4.uasmobile2.pawscorner.ui.screens
 
-import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,7 +9,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -19,10 +17,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kelompok4.uasmobile2.pawscorner.R
-import kelompok4.uasmobile2.pawscorner.data.UserPreferences
 import kelompok4.uasmobile2.pawscorner.viewmodel.AuthState
 import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
-import kotlinx.coroutines.launch
 
 @Composable
 fun RegisterScreen(navController: NavController, authViewModel: AuthViewModel) {

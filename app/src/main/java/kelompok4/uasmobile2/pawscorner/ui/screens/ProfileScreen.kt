@@ -14,37 +14,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import kelompok4.uasmobile2.pawscorner.R
 import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
-import kelompok4.uasmobile2.pawscorner.viewmodel.LoginViewModel
 import kelompok4.uasmobile2.pawscorner.viewmodel.ProfileViewModel
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
 @Composable
 fun ProfileScreen(
     navController: NavHostController,
     authViewModel: AuthViewModel,
-    profileViewModel: ProfileViewModel
+    profileViewModel: ProfileViewModel = viewModel()
 ) {
-    val scope = rememberCoroutineScope()
-    var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-
-    LaunchedEffect(Unit) {
-        scope.launch {
-            profileViewModel.userName.collectLatest {
-                name = it
-            }
-        }
-
-        scope.launch {
-            profileViewModel.userEmail.collectLatest {
-                email = it
-            }
-        }
-    }
+    val name by profileViewModel.userName.collectAsState()
+    val email by profileViewModel.userEmail.collectAsState()
 
     Scaffold(
         bottomBar = {
@@ -82,6 +65,7 @@ fun ProfileScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp)
+                .padding(top = 18.dp)
         ) {
             Text("Profile", fontWeight = FontWeight.Bold, fontSize = 20.sp)
 

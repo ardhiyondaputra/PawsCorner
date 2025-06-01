@@ -16,7 +16,6 @@ import androidx.navigation.compose.rememberNavController
 import kelompok4.uasmobile2.pawscorner.ui.theme.PawsCornerTheme
 import kelompok4.uasmobile2.pawscorner.ui.navigation.AppNavGraph
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kelompok4.uasmobile2.pawscorner.data.UserPreferences
 import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
 import kelompok4.uasmobile2.pawscorner.viewmodel.AuthState
 import kelompok4.uasmobile2.pawscorner.ui.screens.SplashScreen
@@ -46,20 +45,18 @@ class MainActivity : ComponentActivity() {
             Log.e(TAG, "Firebase initialization failed", e)
         }
 
-        val userPreferences = UserPreferences(applicationContext)
-
         setContent {
             PawsCornerTheme {
                 val authViewModel: AuthViewModel = viewModel()
 
-                MainApp(authViewModel, userPreferences)
+                MainApp(authViewModel)
             }
         }
     }
 }
 
 @Composable
-fun MainApp(authViewModel: AuthViewModel, userPreferences: UserPreferences) {
+fun MainApp(authViewModel: AuthViewModel) {
     val navController = rememberNavController()
     val authState by authViewModel.authState.collectAsState()
     var showSplash by remember { mutableStateOf(true) }
@@ -108,8 +105,7 @@ fun MainApp(authViewModel: AuthViewModel, userPreferences: UserPreferences) {
             AppNavGraph(
                 navController = navController,
                 authViewModel = authViewModel,
-                startDestination = startDest,
-                userPreferences = userPreferences
+                startDestination = startDest
             )
         }
     }

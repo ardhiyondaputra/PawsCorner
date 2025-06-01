@@ -21,12 +21,26 @@ sealed class AuthState {
     data class Error(val message: String) : AuthState()
 }
 
+data class UserData(
+    val uid: String,
+    val username: String,
+    val email: String,
+    val phone: String,
+    val emailVerified: Boolean
+)
+
 class AuthViewModel : ViewModel() {
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState
+
+    private val _currentUser = MutableStateFlow<FirebaseUser?>(null)
+    val currentUser: StateFlow<FirebaseUser?> = _currentUser
+
+    private val _userData = MutableStateFlow<UserData?>(null)
+    val userData: StateFlow<UserData?> = _userData
 
     companion object {
         private const val TAG = "AuthViewModel"
@@ -38,11 +52,50 @@ class AuthViewModel : ViewModel() {
 
     fun checkAuthState() {
         val currentUser = auth.currentUser
+        _currentUser.value = currentUser
+
         if (currentUser != null && currentUser.isEmailVerified) {
             _authState.value = AuthState.Success
+            loadUserData(currentUser)
         } else {
             _authState.value = AuthState.Idle
+            _userData.value = null
         }
+    }
+
+    // Fungsi untuk mendapatkan FirebaseUser saat ini
+    fun getCurrentFirebaseUser(): FirebaseUser? {
+        return auth.currentUser
+    }
+
+    // Fungsi untuk memuat data user dari Firestore
+    private fun loadUserData(user: FirebaseUser) {
+        viewModelScope.launch {
+            try {
+                val document = firestore.collection("users")
+                    .document(user.uid)
+                    .get()
+                    .await()
+
+                if (document.exists()) {
+                    val userData = UserData(
+                        uid = user.uid,
+                        username = document.getString("username") ?: "",
+                        email = document.getString("email") ?: user.email ?: "",
+                        phone = document.getString("phone") ?: "",
+                        emailVerified = document.getBoolean("emailVerified") ?: false
+                    )
+                    _userData.value = userData
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading user data", e)
+            }
+        }
+    }
+
+    // Fungsi untuk mendapatkan data user
+    fun getUserData(): UserData? {
+        return _userData.value
     }
 
     fun registerWithEmailVerification(
@@ -57,9 +110,11 @@ class AuthViewModel : ViewModel() {
 
                 // Create user with email and password
                 val result = auth.createUserWithEmailAndPassword(email, password).await()
-                val user = result.user
+                val user: FirebaseUser? = result.user
 
                 if (user != null) {
+                    _currentUser.value = user
+
                     // Create action code settings for email verification
                     val actionCodeSettings = ActionCodeSettings.newBuilder()
                         .setUrl("https://pawscorner.page.link/verify") // Replace with your domain
@@ -115,12 +170,14 @@ class AuthViewModel : ViewModel() {
     fun checkEmailVerification() {
         viewModelScope.launch {
             try {
-                val user = auth.currentUser
+                val user: FirebaseUser? = auth.currentUser
                 if (user != null) {
                     // Reload user to get latest email verification status
                     user.reload().await()
 
                     if (user.isEmailVerified) {
+                        _currentUser.value = user
+
                         // Update user data in Firestore
                         firestore.collection("users")
                             .document(user.uid)
@@ -128,6 +185,7 @@ class AuthViewModel : ViewModel() {
                             .await()
 
                         _authState.value = AuthState.Success
+                        loadUserData(user)
                         Log.d(TAG, "Email verified successfully")
                     }
                 }
@@ -143,7 +201,7 @@ class AuthViewModel : ViewModel() {
             try {
                 _authState.value = AuthState.Loading
 
-                val user = auth.currentUser
+                val user: FirebaseUser? = auth.currentUser
                 if (user != null) {
                     val actionCodeSettings = ActionCodeSettings.newBuilder()
                         .setUrl("https://pawscorner.page.link/verify") // Replace with your domain
@@ -175,15 +233,20 @@ class AuthViewModel : ViewModel() {
                 _authState.value = AuthState.Loading
 
                 val result = auth.signInWithEmailAndPassword(email, password).await()
-                val user = result.user
+                val user: FirebaseUser? = result.user
 
                 if (user != null) {
+                    _currentUser.value = user
+
                     if (user.isEmailVerified) {
                         _authState.value = AuthState.Success
+                        loadUserData(user)
                         Log.d(TAG, "Login successful")
                     } else {
                         // Sign out user if email not verified
                         auth.signOut()
+                        _currentUser.value = null
+                        _userData.value = null
                         _authState.value = AuthState.EmailNotVerified
                     }
                 } else {
@@ -207,11 +270,40 @@ class AuthViewModel : ViewModel() {
 
     fun logout() {
         auth.signOut()
+        _currentUser.value = null
+        _userData.value = null
         _authState.value = AuthState.Idle
         Log.d(TAG, "User logged out")
     }
 
     fun resetAuthState() {
         _authState.value = AuthState.Idle
+    }
+
+    // Fungsi untuk update profil user
+    fun updateUserProfile(username: String, phone: String) {
+        viewModelScope.launch {
+            try {
+                val user = auth.currentUser
+                if (user != null) {
+                    val updates = hashMapOf<String, Any>(
+                        "username" to username,
+                        "phone" to phone,
+                        "updatedAt" to System.currentTimeMillis()
+                    )
+
+                    firestore.collection("users")
+                        .document(user.uid)
+                        .update(updates)
+                        .await()
+
+                    // Reload user data
+                    loadUserData(user)
+                    Log.d(TAG, "User profile updated successfully")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error updating user profile", e)
+            }
+        }
     }
 }
