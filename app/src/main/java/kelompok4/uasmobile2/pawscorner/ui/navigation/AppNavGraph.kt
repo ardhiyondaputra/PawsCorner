@@ -5,6 +5,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import kelompok4.uasmobile2.pawscorner.ui.screens.EditProfileScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.EmailVerificationScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.LoginScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.RegisterScreen
@@ -12,7 +13,6 @@ import kelompok4.uasmobile2.pawscorner.ui.screens.HomeScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.ProfileDetailScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.ProfileScreen
 import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
-import kelompok4.uasmobile2.pawscorner.viewmodel.ProfileViewModel
 
 @Composable
 fun AppNavGraph(
@@ -53,19 +53,23 @@ fun AppNavGraph(
         }
 
         composable("profile") {
-            val profileViewModel: ProfileViewModel = viewModel()
             ProfileScreen(
                 navController = navController,
-                authViewModel = authViewModel,
-                profileViewModel = profileViewModel
+                authViewModel = authViewModel
             )
         }
 
         composable("profile_detail") {
-            val profileViewModel: ProfileViewModel = viewModel()
             ProfileDetailScreen(
                 navController = navController,
-                profileViewModel = profileViewModel
+                authViewModel = authViewModel
+            )
+        }
+
+        composable("edit_profile") {
+            EditProfileScreen(
+                navController = navController,
+                authViewModel = authViewModel
             )
         }
     }

@@ -14,20 +14,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import kelompok4.uasmobile2.pawscorner.R
 import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
-import kelompok4.uasmobile2.pawscorner.viewmodel.ProfileViewModel
 
 @Composable
 fun ProfileScreen(
     navController: NavHostController,
-    authViewModel: AuthViewModel,
-    profileViewModel: ProfileViewModel = viewModel()
+    authViewModel: AuthViewModel
 ) {
-    val name by profileViewModel.userName.collectAsState()
-    val email by profileViewModel.userEmail.collectAsState()
+    // Ambil data user dari AuthViewModel
+    val userData by authViewModel.userData.collectAsState()
 
     Scaffold(
         bottomBar = {
@@ -41,7 +38,7 @@ fun ProfileScreen(
                         onClick = {
                             when (item) {
                                 "Home" -> navController.navigate("home")
-                                "Notif" -> {} // implement jika ada
+                                "Notif" -> {}
                                 "Profil" -> {}
                             }
                         },
@@ -92,23 +89,50 @@ fun ProfileScreen(
                             navController.navigate("profile_detail")
                         }
                     ) {
-                        Text(name, fontWeight = FontWeight.Bold, color = Color.White)
-                        Text(email, fontSize = 12.sp, color = Color.White)
+                        Text(
+                            text = userData?.username ?: "Loading...",
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = userData?.email ?: "",
+                            fontSize = 12.sp,
+                            color = Color.White
+                        )
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            ProfileOption(icon = R.drawable.paws_corner_removebg_preview, title = "Profile Saya", desc = "Make changes to your account") {
+            ProfileOption(
+                icon = R.drawable.paws_corner_removebg_preview,
+                title = "Profile Saya",
+                desc = "Make changes to your account"
+            ) {
                 navController.navigate("profile_detail")
             }
-            ProfileOption(icon = R.drawable.paws_corner_removebg_preview, title = "Alamat Anda", desc = "Alamat paket anda") {}
-            ProfileOption(icon = R.drawable.paws_corner_removebg_preview, title = "Status Pesanan", desc = "") {}
-            ProfileOption(icon = R.drawable.paws_corner_removebg_preview, title = "Log out", desc = "Further secure your account for safety") {
+
+            ProfileOption(
+                icon = R.drawable.paws_corner_removebg_preview,
+                title = "Alamat Anda",
+                desc = "Alamat paket anda"
+            ) {}
+
+            ProfileOption(
+                icon = R.drawable.paws_corner_removebg_preview,
+                title = "Status Pesanan",
+                desc = ""
+            ) {}
+
+            ProfileOption(
+                icon = R.drawable.paws_corner_removebg_preview,
+                title = "Log out",
+                desc = "Further secure your account for safety"
+            ) {
                 authViewModel.logout()
                 navController.navigate("login") {
-                    popUpTo(0)
+                    popUpTo(0) // Clear backstack
                 }
             }
         }
