@@ -38,8 +38,8 @@ fun ProfileScreen(
                         onClick = {
                             when (item) {
                                 "Home" -> navController.navigate("home")
-                                "Notif" -> {}
-                                "Profil" -> {}
+                                "Notif" -> navController.navigate("notification")
+                                "Profil" -> navController.navigate("profile")
                             }
                         },
                         icon = {

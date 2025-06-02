@@ -1,7 +1,6 @@
 package kelompok4.uasmobile2.pawscorner.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -10,6 +9,7 @@ import kelompok4.uasmobile2.pawscorner.ui.screens.EmailVerificationScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.LoginScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.RegisterScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.HomeScreen
+import kelompok4.uasmobile2.pawscorner.ui.screens.NotificationScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.ProfileDetailScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.ProfileScreen
 import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
@@ -71,6 +71,10 @@ fun AppNavGraph(
                 navController = navController,
                 authViewModel = authViewModel
             )
+        }
+
+        composable("notification") {
+            NotificationScreen(navController)
         }
     }
 }

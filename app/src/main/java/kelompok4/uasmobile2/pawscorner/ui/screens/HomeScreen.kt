@@ -65,6 +65,9 @@ fun HomeScreen(
                         selected = selectedItem.value == item,
                         onClick = {
                             selectedItem.value = item
+                            if (item == "Notif") {
+                                navController.navigate("notification")
+                            }
                             if (item == "Profil") {
                                 navController.navigate("profile")
                             }
@@ -129,11 +132,6 @@ fun HeaderSection(searchText: String, onSearchChange: (String) -> Unit) {
                     painter = painterResource(id = R.drawable.shopping_cart),
                     contentDescription = "Cart",
                     modifier = Modifier.size(30.dp).padding(end = 12.dp)
-                )
-                Image(
-                    painter = painterResource(id = R.drawable.user),
-                    contentDescription = "Profile",
-                    modifier = Modifier.size(32.dp).clip(CircleShape)
                 )
             }
         }
