@@ -1,5 +1,6 @@
 package kelompok4.uasmobile2.pawscorner.ui.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -20,6 +21,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import kelompok4.uasmobile2.pawscorner.R
 import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 data class Product(
     val title: String,
@@ -29,6 +32,7 @@ data class Product(
     val price: String
 )
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun HomeScreen(
     navController: NavHostController,
@@ -39,18 +43,56 @@ fun HomeScreen(
     val selectedItem = remember { mutableStateOf("Home") }
     var selectedCategory by remember { mutableStateOf("Makanan") }
 
-    val allProducts = listOf(
-        Product("Josera Mini Deluxe", "900g", "Makanan", R.drawable.paws_corner_removebg_preview, "Rp 85.000"),
-        Product("Pedigree Chicken & Vege", "3kg", "Makanan", R.drawable.paws_corner_removebg_preview, "Rp 120.000"),
-        Product("BlackHawk Puppy Lamb", "20kg", "Makanan", R.drawable.paws_corner_removebg_preview, "Rp 950.000"),
-        Product("Royal Canin Labrador P", "3kg", "Makanan", R.drawable.paws_corner_removebg_preview, "Rp 350.000"),
-        Product("Squeaky Bone Toy", "1pc", "Mainan", R.drawable.paws_corner_removebg_preview, "Rp 25.000"),
-        Product("Catnip Ball", "2pcs", "Mainan", R.drawable.paws_corner_removebg_preview, "Rp 30.000"),
-        Product("Flea Treatment", "30ml", "Obat", R.drawable.paws_corner_removebg_preview, "Rp 75.000"),
-        Product("Shampoo CleanPaws", "500ml", "Kebersihan", R.drawable.paws_corner_removebg_preview, "Rp 60.000")
-    )
+    // State untuk produk dari Firebase
+    var products by remember { mutableStateOf<List<Product>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
 
-    val filteredProducts = allProducts.filter {
+    // LaunchedEffect untuk mengambil data dari Firebase
+    LaunchedEffect(Unit) {
+        try {
+            isLoading = true
+            error = null
+            val firestore = FirebaseFirestore.getInstance()
+            val snapshot = firestore.collection("products").get().await()
+
+            val fetchedProducts = snapshot.documents.mapNotNull { document ->
+                try {
+                    val title = document.getString("title") ?: ""
+                    val weight = document.getString("weight") ?: ""
+                    val category = document.getString("category") ?: ""
+                    val price = document.getLong("price")?.let { "Rp ${String.format("%,d", it).replace(',', '.')}" } ?: ""
+
+                    // Mapping kategori ke resource gambar yang sesuai
+                    val imageRes = when (category.lowercase()) {
+                        "makanan" -> R.drawable.paws_corner_removebg_preview
+                        "mainan" -> R.drawable.paws_corner_removebg_preview
+                        "obat" -> R.drawable.paws_corner_removebg_preview
+                        "kebersihan" -> R.drawable.paws_corner_removebg_preview
+                        else -> R.drawable.paws_corner_removebg_preview
+                    }
+
+                    Product(
+                        title = title,
+                        weight = weight,
+                        category = category,
+                        imageRes = imageRes,
+                        price = price
+                    )
+                } catch (e: Exception) {
+                    null
+                }
+            }
+
+            products = fetchedProducts
+            isLoading = false
+        } catch (e: Exception) {
+            error = "Gagal memuat produk: ${e.message}"
+            isLoading = false
+        }
+    }
+
+    val filteredProducts = products.filter {
         it.category == selectedCategory && it.title.contains(searchText, ignoreCase = true)
     }
 
@@ -96,7 +138,39 @@ fun HomeScreen(
             ) {
                 HeaderSection(searchText) { searchText = it }
                 CategorySection(selectedCategory) { selectedCategory = it }
-                RecommendedSection(filteredProducts)
+
+                // Tampilkan loading, error, atau produk
+                when {
+                    isLoading -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                    error != null -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = error!!,
+                                color = Color.Red,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                    else -> {
+                        RecommendedSection(filteredProducts)
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(60.dp))
             }
         }
@@ -226,23 +300,50 @@ fun RecommendedSection(products: List<Product>) {
     ) {
         items(products) { product ->
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp), // Tinggi tetap untuk semua card
                 elevation = CardDefaults.cardElevation(2.dp)
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(8.dp)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(8.dp),
+                    verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Image(
-                        painter = painterResource(id = product.imageRes),
-                        contentDescription = product.title,
-                        modifier = Modifier.size(80.dp)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = product.title, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    Text(text = product.weight, fontSize = 11.sp)
-                    Text(text = product.price, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF388E3C))
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(id = product.imageRes),
+                            contentDescription = product.title,
+                            modifier = Modifier.size(80.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = product.title,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            maxLines = 2,
+                            minLines = 2,
+                            lineHeight = 14.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = product.weight,
+                            fontSize = 11.sp,
+                            color = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = product.price,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            color = Color(0xFF388E3C)
+                        )
+                    }
+
                     Button(
                         onClick = { /* TODO: Tambah ke keranjang */ },
                         modifier = Modifier.fillMaxWidth(),
