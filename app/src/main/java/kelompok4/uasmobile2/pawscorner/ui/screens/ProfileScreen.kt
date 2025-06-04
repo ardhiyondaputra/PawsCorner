@@ -108,7 +108,7 @@ fun ProfileScreen(
             ProfileOption(
                 icon = R.drawable.paws_corner_removebg_preview,
                 title = "Profile Saya",
-                desc = "Make changes to your account"
+                desc = ""
             ) {
                 navController.navigate("profile_detail")
             }
@@ -116,7 +116,7 @@ fun ProfileScreen(
             ProfileOption(
                 icon = R.drawable.paws_corner_removebg_preview,
                 title = "Alamat Anda",
-                desc = "Alamat paket anda"
+                desc = ""
             ) {}
 
             ProfileOption(
@@ -128,7 +128,7 @@ fun ProfileScreen(
             ProfileOption(
                 icon = R.drawable.paws_corner_removebg_preview,
                 title = "Log out",
-                desc = "Further secure your account for safety"
+                desc = ""
             ) {
                 authViewModel.logout()
                 navController.navigate("login") {

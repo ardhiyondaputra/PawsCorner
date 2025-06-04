@@ -64,7 +64,8 @@ fun EditProfileScreen(
         OutlinedTextField(
             value = username,
             onValueChange = { username = it },
-            label = { Text("Nama Pengguna") },
+            label = { Text("Nama Pengguna", color = Color.Black) },
+            textStyle = LocalTextStyle.current.copy(color = Color.Black),
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -73,7 +74,8 @@ fun EditProfileScreen(
         OutlinedTextField(
             value = phone,
             onValueChange = { phone = it },
-            label = { Text("Nomor Telepon") },
+            label = { Text("Nomor Telepon", color = Color.Black) },
+            textStyle = LocalTextStyle.current.copy(color = Color.Black),
             modifier = Modifier.fillMaxWidth()
         )
 

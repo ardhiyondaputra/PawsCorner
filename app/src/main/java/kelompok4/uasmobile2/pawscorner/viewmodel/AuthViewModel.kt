@@ -129,21 +129,25 @@ class AuthViewModel : ViewModel() {
                     // Send email verification
                     user.sendEmailVerification(actionCodeSettings).await()
 
-                    // Save user data to Firestore (but mark as unverified)
+                    // Save user data to Firestore dengan UID sebagai Document ID
                     val userData = hashMapOf(
-                        "username" to username,
+                        "username" to username,        // Sesuai dengan AuthViewModel
                         "email" to email,
                         "phone" to phone,
                         "emailVerified" to false,
-                        "createdAt" to System.currentTimeMillis()
+                        "createdAt" to System.currentTimeMillis(),
+                        "updatedAt" to System.currentTimeMillis()
+                        // JANGAN simpan password di Firestore!
                     )
 
+                    // Gunakan user.uid sebagai Document ID
                     firestore.collection("users")
-                        .document(user.uid)
+                        .document(user.uid)  // INI YANG PENTING: gunakan UID sebagai Document ID
                         .set(userData)
                         .await()
 
                     _authState.value = AuthState.EmailVerificationSent
+                    Log.d(TAG, "User registered with UID: ${user.uid}")
                     Log.d(TAG, "Email verification sent to: $email")
 
                 } else {
