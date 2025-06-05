@@ -88,7 +88,7 @@ fun AppNavGraph(
                 addressViewModel = addressViewModel  // Pass the addressViewModel here
             )
         }
-        composable("tambah_alamat") {
+        composable("add_address") {
             AddAddressScreen(
                 navController = navController,
                 addressViewModel = addressViewModel // Pass the AddressViewModel here

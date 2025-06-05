@@ -4,8 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,18 +32,20 @@ fun AddressListScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = { Text("Alamat Anda") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Kembali")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
                     }
                 }
             )
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate("tambah_alamat") }
+                onClick = { navController.navigate("add_address") },
+                modifier = Modifier
+                    .padding(bottom = 32.dp, end = 24.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Tambah Alamat")
             }
@@ -68,14 +71,13 @@ fun AddressListScreen(
                         .fillMaxSize()
                         .padding(bottom = 72.dp)
                 ) {
-                    items(addresses) { address ->
+                    items(addresses) { (id, address) ->
                         AddressItem(
                             address = address,
-                            isSelected = selectedAddressId == address.id,
-                            onSelected = { selectedAddressId = address.id },
-                            onEdit = {
-                                navController.navigate("edit_address/{addressId}")
-                            }
+                            isSelected = selectedAddressId == id,
+                            onSelected = { selectedAddressId = id },
+                            onEdit = { navController.navigate("edit_address/$id") },
+                            onDeleteConfirmed = { addressViewModel.deleteAddress(id) }
                         )
                     }
                 }
@@ -89,8 +91,32 @@ fun AddressItem(
     address: Address,
     isSelected: Boolean,
     onSelected: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    onDeleteConfirmed: () -> Unit
 ) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Konfirmasi Hapus") },
+            text = { Text("Apakah Anda yakin ingin menghapus alamat ini?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteDialog = false
+                    onDeleteConfirmed()
+                }) {
+                    Text("Hapus")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Batal")
+                }
+            }
+        )
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -133,13 +159,36 @@ fun AddressItem(
                         text = "Provinsi: ${address.province}",
                         style = MaterialTheme.typography.bodySmall
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Kabupaten/Kota: ${address.regency}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Kecamatan: ${address.district}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Kelurahan/Desa: ${address.village}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
 
-                IconButton(onClick = onEdit) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit Alamat"
-                    )
+                Column(horizontalAlignment = Alignment.End) {
+                    IconButton(onClick = onEdit) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit Alamat"
+                        )
+                    }
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Hapus Alamat"
+                        )
+                    }
                 }
             }
         }

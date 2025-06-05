@@ -7,7 +7,7 @@ import kelompok4.uasmobile2.pawscorner.data.VillageResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 
-interface WilayahApiService {
+interface RegionApiService {
     @GET("api/provinces.json")
     suspend fun getProvinces(): ProvinceResponse
 

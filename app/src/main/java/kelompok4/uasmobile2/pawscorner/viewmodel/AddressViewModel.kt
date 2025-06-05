@@ -2,57 +2,113 @@ package kelompok4.uasmobile2.pawscorner.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kelompok4.uasmobile2.pawscorner.data.Address
 import kelompok4.uasmobile2.pawscorner.data.District
 import kelompok4.uasmobile2.pawscorner.data.Province
 import kelompok4.uasmobile2.pawscorner.data.Regency
 import kelompok4.uasmobile2.pawscorner.data.Village
 import kelompok4.uasmobile2.pawscorner.network.RetrofitClient
-import kelompok4.uasmobile2.pawscorner.network.WilayahApiService
+import kelompok4.uasmobile2.pawscorner.network.RegionApiService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class AddressViewModel : ViewModel() {
 
-    private val _addresses = MutableStateFlow<List<Address>>(emptyList())
-    val addresses: StateFlow<List<Address>> = _addresses
+    private val firestore = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
 
-    // Dummy list address disimpan di memori
-    private val addressList = mutableListOf<Address>()
+    // ID dokumen Firestore + isi Address
+    private val _addresses = MutableStateFlow<List<Pair<String, Address>>>(emptyList())
+    val addresses: StateFlow<List<Pair<String, Address>>> = _addresses
 
     fun loadAddresses() {
-        viewModelScope.launch {
-            _addresses.value = addressList
-        }
+        val userId = auth.currentUser?.uid ?: return
+        firestore.collection("users").document(userId).collection("addresses")
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val list = snapshot.documents.mapNotNull { doc ->
+                    val address = doc.toObject(Address::class.java)
+                    if (address != null) {
+                        doc.id to address
+                    } else null
+                }
+                _addresses.value = list
+            }
+            .addOnFailureListener { it.printStackTrace() }
     }
 
     fun createAddress(address: Address) {
-        viewModelScope.launch {
-            addressList.add(address)
-            loadAddresses()
+        val userId = auth.currentUser?.uid ?: return
+        val addressRef = firestore.collection("users").document(userId).collection("addresses").document()
+
+        val now = Timestamp.now()
+        val data = address.copy(
+            createdAt = now,
+            updatedAt = now
+        )
+
+        if (data.isPrimary) {
+            // Jika isPrimary true, set semua lainnya jadi false dulu
+            firestore.collection("users").document(userId).collection("addresses")
+                .get()
+                .addOnSuccessListener { snapshot ->
+                    val batch = firestore.batch()
+                    for (doc in snapshot.documents) {
+                        batch.update(doc.reference, "isPrimary", false)
+                    }
+                    batch.commit().addOnSuccessListener {
+                        addressRef.set(data)
+                            .addOnSuccessListener { loadAddresses() }
+                    }
+                }
+        } else {
+            addressRef.set(data)
+                .addOnSuccessListener { loadAddresses() }
         }
     }
 
-    fun updateAddress(address: Address) {
-        viewModelScope.launch {
-            val index = addressList.indexOfFirst { it.id == address.id }
-            if (index != -1) {
-                addressList[index] = address
-                loadAddresses()
-            }
+    fun updateAddress(addressId: String, address: Address) {
+        val userId = auth.currentUser?.uid ?: return
+        val updatedAddress = address.copy(updatedAt = Timestamp.now())
+
+        if (updatedAddress.isPrimary) {
+            firestore.collection("users").document(userId).collection("addresses")
+                .get()
+                .addOnSuccessListener { snapshot ->
+                    val batch = firestore.batch()
+                    for (doc in snapshot.documents) {
+                        batch.update(doc.reference, "isPrimary", false)
+                    }
+                    batch.commit().addOnSuccessListener {
+                        firestore.collection("users").document(userId)
+                            .collection("addresses").document(addressId)
+                            .set(updatedAddress)
+                            .addOnSuccessListener { loadAddresses() }
+                    }
+                }
+        } else {
+            firestore.collection("users").document(userId)
+                .collection("addresses").document(addressId)
+                .set(updatedAddress)
+                .addOnSuccessListener { loadAddresses() }
         }
     }
 
     fun deleteAddress(addressId: String) {
-        viewModelScope.launch {
-            addressList.removeIf { it.id == addressId }
-            loadAddresses()
-        }
+        val userId = auth.currentUser?.uid ?: return
+        firestore.collection("users").document(userId)
+            .collection("addresses").document(addressId)
+            .delete()
+            .addOnSuccessListener { loadAddresses() }
     }
 
-    // Untuk API wilayah tetap pakai Retrofit
-    private val wilayahApi: WilayahApiService = RetrofitClient.instance.create(WilayahApiService::class.java)
+    // ===== Wilayah Indonesia (API) =====
+
+    private val regionApi: RegionApiService = RetrofitClient.instance.create(RegionApiService::class.java)
 
     private val _provinces = MutableStateFlow<List<Province>>(emptyList())
     val provinces: StateFlow<List<Province>> = _provinces
@@ -69,7 +125,7 @@ class AddressViewModel : ViewModel() {
     fun loadProvinces() {
         viewModelScope.launch {
             try {
-                _provinces.value = wilayahApi.getProvinces().data
+                _provinces.value = regionApi.getProvinces().data
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -78,19 +134,31 @@ class AddressViewModel : ViewModel() {
 
     fun loadRegencies(provinceCode: String) {
         viewModelScope.launch {
-            _regencies.value = wilayahApi.getRegencies(provinceCode).data
+            try {
+                _regencies.value = regionApi.getRegencies(provinceCode).data
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
     fun loadDistricts(regencyCode: String) {
         viewModelScope.launch {
-            _districts.value = wilayahApi.getDistricts(regencyCode).data
+            try {
+                _districts.value = regionApi.getDistricts(regencyCode).data
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
     fun loadVillages(districtCode: String) {
         viewModelScope.launch {
-            _villages.value = wilayahApi.getVillages(districtCode).data
+            try {
+                _villages.value = regionApi.getVillages(districtCode).data
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 }
