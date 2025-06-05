@@ -117,7 +117,9 @@ fun ProfileScreen(
                 icon = R.drawable.paws_corner_removebg_preview,
                 title = "Alamat Anda",
                 desc = ""
-            ) {}
+            ) {
+                navController.navigate("address")
+            }
 
             ProfileOption(
                 icon = R.drawable.paws_corner_removebg_preview,

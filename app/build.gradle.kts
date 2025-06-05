@@ -56,6 +56,19 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-database-ktx")
 
+    //API alamat
+    implementation ("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+    //material
+    implementation ("androidx.compose.ui:ui:1.1.0") // Jetpack Compose UI
+    implementation ("androidx.compose.material:material:1.1.0") // Material Components untuk Compose
+    implementation ("androidx.compose.material3:material3:1.0.0") // Material3 (jika Anda ingin menggunakannya)
+    implementation ("androidx.compose.ui:ui-tooling-preview:1.1.0") // Untuk preview composable functions
+    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.3.1") // Untuk lifecycle-aware components
+    implementation ("androidx.navigation:navigation-compose:2.4.0") // Untuk navigation di Compose
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

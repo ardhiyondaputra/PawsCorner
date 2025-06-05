@@ -17,6 +17,7 @@ import kelompok4.uasmobile2.pawscorner.ui.theme.PawsCornerTheme
 import kelompok4.uasmobile2.pawscorner.ui.navigation.AppNavGraph
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
+import kelompok4.uasmobile2.pawscorner.viewmodel.AddressViewModel
 import kelompok4.uasmobile2.pawscorner.viewmodel.AuthState
 import kelompok4.uasmobile2.pawscorner.ui.screens.SplashScreen
 import com.google.firebase.FirebaseApp
@@ -48,24 +49,24 @@ class MainActivity : ComponentActivity() {
         setContent {
             PawsCornerTheme {
                 val authViewModel: AuthViewModel = viewModel()
-
-                MainApp(authViewModel)
+                val addressViewModel: AddressViewModel = viewModel()
+                MainApp(authViewModel, addressViewModel)
             }
         }
     }
 }
 
 @Composable
-fun MainApp(authViewModel: AuthViewModel) {
+fun MainApp(authViewModel: AuthViewModel, addressViewModel: AddressViewModel){
     val navController = rememberNavController()
     val authState by authViewModel.authState.collectAsState()
+    val addressViewModel: AddressViewModel = viewModel()
     var showSplash by remember { mutableStateOf(true) }
     var isLoading by remember { mutableStateOf(true) }
 
     // Splash screen dengan loading state
     LaunchedEffect(Unit) {
         try {
-            // Check current user status
             authViewModel.checkAuthState()
             kotlinx.coroutines.delay(2000) // Splash duration
             showSplash = false
@@ -105,6 +106,7 @@ fun MainApp(authViewModel: AuthViewModel) {
             AppNavGraph(
                 navController = navController,
                 authViewModel = authViewModel,
+                addressViewModel = addressViewModel,
                 startDestination = startDest
             )
         }

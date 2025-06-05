@@ -13,11 +13,16 @@ import kelompok4.uasmobile2.pawscorner.ui.screens.NotificationScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.ProfileDetailScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.ProfileScreen
 import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
+import kelompok4.uasmobile2.pawscorner.viewmodel.AddressViewModel
+import kelompok4.uasmobile2.pawscorner.ui.screens.alamat.AddressListScreen
+import kelompok4.uasmobile2.pawscorner.ui.screens.alamat.AddAddressScreen
+
 
 @Composable
 fun AppNavGraph(
     navController: NavHostController,
     authViewModel: AuthViewModel,
+    addressViewModel: AddressViewModel,
     startDestination: String
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
@@ -75,6 +80,28 @@ fun AppNavGraph(
 
         composable("notification") {
             NotificationScreen(navController)
+        }
+
+        composable("address") {
+            AddressListScreen(
+                navController = navController,
+                addressViewModel = addressViewModel  // Pass the addressViewModel here
+            )
+        }
+        composable("tambah_alamat") {
+            AddAddressScreen(
+                navController = navController,
+                addressViewModel = addressViewModel // Pass the AddressViewModel here
+            )
+        }
+
+        composable("edit_address/{addressId}") { backStackEntry ->
+            val addressId = backStackEntry.arguments?.getString("addressId") ?: ""
+            AddAddressScreen(
+                navController = navController,
+                addressViewModel = addressViewModel,
+                addressId = addressId // Pass the addressId for editing
+            )
         }
     }
 }
