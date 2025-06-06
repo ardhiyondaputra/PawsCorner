@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kelompok4.uasmobile2.pawscorner.data.UserData
+
 
 sealed class AuthState {
     object Idle : AuthState()
@@ -21,13 +23,6 @@ sealed class AuthState {
     data class Error(val message: String) : AuthState()
 }
 
-data class UserData(
-    val uid: String,
-    val username: String,
-    val email: String,
-    val phone: String,
-    val emailVerified: Boolean
-)
 
 class AuthViewModel : ViewModel() {
     private val auth = FirebaseAuth.getInstance()
