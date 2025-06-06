@@ -70,6 +70,8 @@ dependencies {
     implementation ("androidx.compose.ui:ui-tooling-preview:1.1.0") // Untuk preview composable functions
     implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.3.1") // Untuk lifecycle-aware components
     implementation ("androidx.navigation:navigation-compose:2.4.0") // Untuk navigation di Compose
+    implementation ("androidx.compose.material:material-icons-extended:1.3.1")
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

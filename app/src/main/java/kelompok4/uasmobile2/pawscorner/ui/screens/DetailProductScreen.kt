@@ -23,6 +23,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kelompok4.uasmobile2.pawscorner.R
 import kelompok4.uasmobile2.pawscorner.data.Product
 import kotlinx.coroutines.tasks.await
+import androidx.compose.material.icons.filled.Payment
+
 
 @SuppressLint("DefaultLocale")
 @Composable
@@ -167,7 +169,43 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                 )
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // TOMBOL BELI SEKARANG
+            Button(
+                onClick = {
+                    val firestore = FirebaseFirestore.getInstance()
+                    val order = hashMapOf(
+                        "productId" to product.documentId,
+                        "title" to product.title,
+                        "price" to product.price,
+                        "imageRes" to product.imageRes,
+                        "quantity" to 1,
+                        "orderTime" to System.currentTimeMillis()
+                    )
+                    firestore.collection("orders").add(order)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Payment,
+                    contentDescription = "Beli Sekarang",
+                    tint = Color.White
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Beli Sekarang",
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
+
