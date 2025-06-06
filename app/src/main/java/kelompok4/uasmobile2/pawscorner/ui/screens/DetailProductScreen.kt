@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,7 +23,6 @@ import kelompok4.uasmobile2.pawscorner.R
 import kelompok4.uasmobile2.pawscorner.data.Product
 import kotlinx.coroutines.tasks.await
 import androidx.compose.material.icons.filled.Payment
-
 
 @SuppressLint("DefaultLocale")
 @Composable
@@ -77,135 +75,153 @@ fun DetailProductScreen(documentId: String, navController: NavHostController) {
 
 @Composable
 fun DetailProductContent(product: Product, navController: NavHostController) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-    ) {
-        // HEADER
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Kembali"
-                )
+    Scaffold(
+        bottomBar = {
+            // BUTTON AREA - SEJAJAR KANAN KIRI
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .padding(bottom = 50.dp), // Posisi lebih tinggi dari bawah
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // TOMBOL TAMBAH KE KERANJANG
+                Button(
+                    onClick = {
+                        val firestore = FirebaseFirestore.getInstance()
+                        val cartItem = hashMapOf(
+                            "productId" to product.documentId,
+                            "title" to product.title,
+                            "price" to product.price,
+                            "imageRes" to product.imageRes,
+                            "quantity" to 1
+                        )
+                        firestore.collection("cart").add(cartItem)
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD0E8FF)),
+                    shape = RoundedCornerShape(24.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.shopping_cart),
+                        contentDescription = null,
+                        tint = Color(0xFF0D47A1),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Keranjang",
+                        color = Color(0xFF0D47A1),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    )
+                }
+
+                // TOMBOL BELI SEKARANG
+                Button(
+                    onClick = {
+                        val firestore = FirebaseFirestore.getInstance()
+                        val order = hashMapOf(
+                            "productId" to product.documentId,
+                            "title" to product.title,
+                            "price" to product.price,
+                            "imageRes" to product.imageRes,
+                            "quantity" to 1,
+                            "orderTime" to System.currentTimeMillis()
+                        )
+                        firestore.collection("orders").add(order)
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                    shape = RoundedCornerShape(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Payment,
+                        contentDescription = "Beli Sekarang",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Beli Sekarang",
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    )
+                }
             }
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Detail Produk",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-            )
         }
-
-        // IMAGE
-        Image(
-            painter = painterResource(id = product.imageRes),
-            contentDescription = product.title,
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .padding(horizontal = 16.dp)
-        )
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
+        ) {
+            // HEADER
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp)
+                    .height(56.dp), // tinggi tetap untuk menyusun komponen
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Detail Produk",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                )
 
-        Spacer(modifier = Modifier.height(16.dp))
+                IconButton(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier.align(Alignment.CenterStart)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Kembali"
+                    )
+                }
+            }
 
-        // INFORMASI PRODUK
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            Text(text = product.title, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = "Kategori: ${product.category}", color = Color.Gray, fontSize = 14.sp)
-            Text(text = "Berat: ${product.weight}", color = Color.Gray, fontSize = 14.sp)
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = product.price,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF2E7D32)
+            // IMAGE
+            Image(
+                painter = painterResource(id = product.imageRes),
+                contentDescription = product.title,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .padding(horizontal = 16.dp)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text("Deskripsi:", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-            Text(product.description ?: "-", fontSize = 14.sp)
+            // INFORMASI PRODUK
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Text(text = product.title, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = "Kategori: ${product.category}", color = Color.Gray, fontSize = 14.sp)
+                Text(text = "Berat: ${product.weight}", color = Color.Gray, fontSize = 14.sp)
 
-            Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            // TOMBOL TAMBAH KE KERANJANG
-            Button(
-                onClick = {
-                    val firestore = FirebaseFirestore.getInstance()
-                    val cartItem = hashMapOf(
-                        "productId" to product.documentId,
-                        "title" to product.title,
-                        "price" to product.price,
-                        "imageRes" to product.imageRes,
-                        "quantity" to 1
-                    )
-                    firestore.collection("cart").add(cartItem)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD0E8FF)),
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.shopping_cart),
-                    contentDescription = null,
-                    tint = Color(0xFF0D47A1)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Tambah ke Keranjang",
-                    color = Color(0xFF0D47A1),
-                    fontWeight = FontWeight.SemiBold
+                    text = product.price,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF2E7D32)
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text("Deskripsi:", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                Text(product.description ?: "-", fontSize = 14.sp)
+
+                // Tambah ruang ekstra agar konten tidak tertutup button
+                Spacer(modifier = Modifier.height(32.dp))
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // TOMBOL BELI SEKARANG
-            Button(
-                onClick = {
-                    val firestore = FirebaseFirestore.getInstance()
-                    val order = hashMapOf(
-                        "productId" to product.documentId,
-                        "title" to product.title,
-                        "price" to product.price,
-                        "imageRes" to product.imageRes,
-                        "quantity" to 1,
-                        "orderTime" to System.currentTimeMillis()
-                    )
-                    firestore.collection("orders").add(order)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Payment,
-                    contentDescription = "Beli Sekarang",
-                    tint = Color.White
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Beli Sekarang",
-                    color = Color.White,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
-

@@ -1,6 +1,5 @@
 package kelompok4.uasmobile2.pawscorner.data
 
-
 data class UserData(
     val uid: String,
     val username: String,

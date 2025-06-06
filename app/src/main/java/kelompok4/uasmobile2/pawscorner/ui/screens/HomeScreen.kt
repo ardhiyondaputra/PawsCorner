@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -273,7 +272,7 @@ fun RecommendedSection(products: List<Product>, navController: NavHostController
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(230.dp)
+                    .height(180.dp)
                     .clickable {
                         navController.navigate("detail/${product.documentId}")
                     },
@@ -296,19 +295,6 @@ fun RecommendedSection(products: List<Product>, navController: NavHostController
                         Text(product.title, fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 2)
                         Text(product.weight, fontSize = 11.sp, color = Color.Gray)
                         Text(product.price, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF388E3C))
-                    }
-                    Button(
-                        onClick = { /* Tambah ke keranjang */ },
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(vertical = 4.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.shopping_cart),
-                            contentDescription = "Add",
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Add", fontSize = 12.sp)
                     }
                 }
             }

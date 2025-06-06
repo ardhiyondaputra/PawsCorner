@@ -13,7 +13,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kelompok4.uasmobile2.pawscorner.data.UserData
 
-
 sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
@@ -22,7 +21,6 @@ sealed class AuthState {
     object EmailNotVerified : AuthState()
     data class Error(val message: String) : AuthState()
 }
-
 
 class AuthViewModel : ViewModel() {
     private val auth = FirebaseAuth.getInstance()
