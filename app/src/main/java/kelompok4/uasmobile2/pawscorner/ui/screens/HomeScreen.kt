@@ -1,13 +1,15 @@
 package kelompok4.uasmobile2.pawscorner.ui.screens
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,18 +21,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import kelompok4.uasmobile2.pawscorner.R
-import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
 import com.google.firebase.firestore.FirebaseFirestore
+import kelompok4.uasmobile2.pawscorner.R
+import kelompok4.uasmobile2.pawscorner.data.Product
+import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
 import kotlinx.coroutines.tasks.await
-
-data class Product(
-    val title: String,
-    val weight: String,
-    val category: String,
-    val imageRes: Int,
-    val price: String
-)
 
 @SuppressLint("DefaultLocale")
 @Composable
@@ -38,32 +33,30 @@ fun HomeScreen(
     navController: NavHostController,
     authViewModel: AuthViewModel
 ) {
-    val scrollState = rememberScrollState()
     var searchText by remember { mutableStateOf("") }
-    val selectedItem = remember { mutableStateOf("Home") }
+    var selectedItem by remember { mutableStateOf("Home") }
     var selectedCategory by remember { mutableStateOf("Makanan") }
 
-    // State untuk produk dari Firebase
     var products by remember { mutableStateOf<List<Product>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
 
-    // LaunchedEffect untuk mengambil data dari Firebase
     LaunchedEffect(Unit) {
         try {
-            isLoading = true
-            error = null
             val firestore = FirebaseFirestore.getInstance()
             val snapshot = firestore.collection("products").get().await()
-
             val fetchedProducts = snapshot.documents.mapNotNull { document ->
                 try {
                     val title = document.getString("title") ?: ""
                     val weight = document.getString("weight") ?: ""
                     val category = document.getString("category") ?: ""
-                    val price = document.getLong("price")?.let { "Rp ${String.format("%,d", it).replace(',', '.')}" } ?: ""
+                    val price = document.getLong("price")?.let {
+                        "Rp ${String.format("%,d", it).replace(',', '.')}"
+                    } ?: ""
+                    val quantity = document.getLong("quantity")?.toInt() ?: 0
+                    val description = document.getString("description") ?: ""
+                    val documentId = document.id
 
-                    // Mapping kategori ke resource gambar yang sesuai
                     val imageRes = when (category.lowercase()) {
                         "makanan" -> R.drawable.paws_corner_removebg_preview
                         "mainan" -> R.drawable.paws_corner_removebg_preview
@@ -77,13 +70,15 @@ fun HomeScreen(
                         weight = weight,
                         category = category,
                         imageRes = imageRes,
-                        price = price
+                        price = price,
+                        quantity = quantity,
+                        description = description,
+                        documentId = documentId
                     )
                 } catch (e: Exception) {
                     null
                 }
             }
-
             products = fetchedProducts
             isLoading = false
         } catch (e: Exception) {
@@ -104,14 +99,12 @@ fun HomeScreen(
 
                 items.forEachIndexed { index, item ->
                     NavigationBarItem(
-                        selected = selectedItem.value == item,
+                        selected = selectedItem == item,
                         onClick = {
-                            selectedItem.value = item
-                            if (item == "Notif") {
-                                navController.navigate("notification")
-                            }
-                            if (item == "Profil") {
-                                navController.navigate("profile")
+                            selectedItem = item
+                            when (item) {
+                                "Notif" -> navController.navigate("notification")
+                                "Profil" -> navController.navigate("profile")
                             }
                         },
                         icon = {
@@ -126,49 +119,29 @@ fun HomeScreen(
                 }
             }
         }
-    ) { innerPadding ->
-        if (selectedItem.value == "Profil") {
+    ) { paddingValues ->
+        if (selectedItem == "Profil") {
             ProfileScreen()
         } else {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
-                    .verticalScroll(scrollState)
+                    .padding(paddingValues)
             ) {
                 HeaderSection(searchText) { searchText = it }
                 CategorySection(selectedCategory) { selectedCategory = it }
 
-                // Tampilkan loading, error, atau produk
                 when {
-                    isLoading -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
+                    isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
                     }
-                    error != null -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = error!!,
-                                color = Color.Red,
-                                fontSize = 14.sp
-                            )
-                        }
+                    error != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(text = error!!, color = Color.Red)
                     }
-                    else -> {
-                        RecommendedSection(filteredProducts)
+                    filteredProducts.isEmpty() -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Tidak ada produk ditemukan.")
                     }
+                    else -> RecommendedSection(filteredProducts, navController)
                 }
 
                 Spacer(modifier = Modifier.height(60.dp))
@@ -176,9 +149,6 @@ fun HomeScreen(
         }
     }
 }
-
-@Composable
-fun ProfileScreen() {}
 
 @Composable
 fun HeaderSection(searchText: String, onSearchChange: (String) -> Unit) {
@@ -227,7 +197,7 @@ fun HeaderSection(searchText: String, onSearchChange: (String) -> Unit) {
             placeholder = { Text("Search", fontSize = 18.sp) },
             leadingIcon = {
                 Icon(
-                    painter = painterResource(id = R.drawable.search__1_),
+                    painter = painterResource(id = R.drawable.search__1_  ),
                     contentDescription = "Search",
                     modifier = Modifier.size(24.dp)
                 )
@@ -246,6 +216,8 @@ fun HeaderSection(searchText: String, onSearchChange: (String) -> Unit) {
     }
 }
 
+
+
 @Composable
 fun CategorySection(selectedCategory: String, onCategorySelected: (String) -> Unit) {
     val categories = listOf(
@@ -258,8 +230,8 @@ fun CategorySection(selectedCategory: String, onCategorySelected: (String) -> Un
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp, horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceAround
     ) {
         categories.forEach { (name, iconRes) ->
             Column(
@@ -275,7 +247,6 @@ fun CategorySection(selectedCategory: String, onCategorySelected: (String) -> Un
                     contentDescription = name,
                     modifier = Modifier.size(30.dp)
                 )
-                Spacer(modifier = Modifier.height(4.dp))
                 Text(text = name, fontSize = 10.sp)
             }
         }
@@ -283,27 +254,30 @@ fun CategorySection(selectedCategory: String, onCategorySelected: (String) -> Un
 }
 
 @Composable
-fun RecommendedSection(products: List<Product>) {
+fun RecommendedSection(products: List<Product>, navController: NavHostController) {
     Text(
         text = "Recommended Product",
         fontWeight = FontWeight.Bold,
         fontSize = 16.sp,
-        modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
+        modifier = Modifier.padding(start = 16.dp, top = 8.dp)
     )
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.heightIn(max = 500.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
         items(products) { product ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(220.dp), // Tinggi tetap untuk semua card
-                elevation = CardDefaults.cardElevation(2.dp)
+                    .height(230.dp)
+                    .clickable {
+                        navController.navigate("detail/${product.documentId}")
+                    },
+                elevation = CardDefaults.cardElevation(4.dp)
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -312,40 +286,19 @@ fun RecommendedSection(products: List<Product>) {
                         .padding(8.dp),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Image(
                             painter = painterResource(id = product.imageRes),
                             contentDescription = product.title,
                             modifier = Modifier.size(80.dp)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = product.title,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
-                            maxLines = 2,
-                            minLines = 2,
-                            lineHeight = 14.sp
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = product.weight,
-                            fontSize = 11.sp,
-                            color = Color.Gray
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = product.price,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
-                            color = Color(0xFF388E3C)
-                        )
+                        Text(product.title, fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 2)
+                        Text(product.weight, fontSize = 11.sp, color = Color.Gray)
+                        Text(product.price, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF388E3C))
                     }
-
                     Button(
-                        onClick = { /* TODO: Tambah ke keranjang */ },
+                        onClick = { /* Tambah ke keranjang */ },
                         modifier = Modifier.fillMaxWidth(),
                         contentPadding = PaddingValues(vertical = 4.dp)
                     ) {
@@ -360,5 +313,12 @@ fun RecommendedSection(products: List<Product>) {
                 }
             }
         }
+    }
+}
+
+@Composable
+fun ProfileScreen() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text("Profile")
     }
 }

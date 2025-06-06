@@ -2,8 +2,11 @@ package kelompok4.uasmobile2.pawscorner.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+import kelompok4.uasmobile2.pawscorner.ui.screens.DetailProductScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.EditProfileScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.EmailVerificationScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.LoginScreen
@@ -102,6 +105,14 @@ fun AppNavGraph(
                 addressViewModel = addressViewModel,
                 addressId = addressId // Pass the addressId for editing
             )
+        }
+
+        composable(
+            route = "detail/{documentId}",
+            arguments = listOf(navArgument("documentId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val documentId = backStackEntry.arguments?.getString("documentId") ?: return@composable
+            DetailProductScreen(documentId = documentId, navController = navController)
         }
     }
 }
