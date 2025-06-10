@@ -23,6 +23,7 @@ import kelompok4.uasmobile2.pawscorner.R
 import kelompok4.uasmobile2.pawscorner.data.Product
 import kotlinx.coroutines.tasks.await
 import androidx.compose.material.icons.filled.Payment
+import com.google.firebase.auth.FirebaseAuth
 
 @SuppressLint("DefaultLocale")
 @Composable
@@ -88,15 +89,24 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                 // TOMBOL TAMBAH KE KERANJANG
                 Button(
                     onClick = {
+                        val auth = FirebaseAuth.getInstance()
                         val firestore = FirebaseFirestore.getInstance()
-                        val cartItem = hashMapOf(
-                            "productId" to product.documentId,
-                            "title" to product.title,
-                            "price" to product.price,
-                            "imageRes" to product.imageRes,
-                            "quantity" to 1
-                        )
-                        firestore.collection("cart").add(cartItem)
+                        val uid = auth.currentUser?.uid
+
+                        if (uid != null) {
+                            val cartItem = hashMapOf(
+                                "productId" to product.documentId,
+                                "title" to product.title,
+                                "price" to product.price,
+                                "imageRes" to product.imageRes,
+                                "quantity" to 1
+                            )
+
+                            firestore.collection("users")
+                                .document(uid)
+                                .collection("cart")
+                                .add(cartItem)
+                        }
                     },
                     modifier = Modifier
                         .weight(1f)

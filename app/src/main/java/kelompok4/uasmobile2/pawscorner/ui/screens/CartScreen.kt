@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import kelompok4.uasmobile2.pawscorner.R
@@ -29,32 +30,34 @@ import kelompok4.uasmobile2.pawscorner.data.CartItem
 fun CartScreen(navController: NavController) {
     var cartItems by remember { mutableStateOf<List<CartItem>>(emptyList()) }
     var subtotal by remember { mutableStateOf(0) }
+    val db = FirebaseFirestore.getInstance()
+    val uid = FirebaseAuth.getInstance().currentUser?.uid
 
     DisposableEffect(Unit) {
-        val db = FirebaseFirestore.getInstance()
-        val listener: ListenerRegistration = db.collection("cart")
-            .addSnapshotListener { value, _ ->
-                value?.let {
-                    val items = it.documents.mapNotNull { doc ->
-                        val priceStr = doc.getString("price")?.replace(Regex("[^\\d]"), "") ?: "0"
-                        val quantity = doc.getLong("quantity")?.toInt() ?: 1
-                        val price = priceStr.toIntOrNull() ?: 0
+        val listener: ListenerRegistration? = uid?.let {
+            db.collection("users").document(it).collection("cart")
+                .addSnapshotListener { value, _ ->
+                    value?.let {
+                        val items = it.documents.mapNotNull { doc ->
+                            val priceStr = doc.getString("price")?.replace(Regex("[^\\d]"), "") ?: "0"
+                            val quantity = doc.getLong("quantity")?.toInt() ?: 1
 
-                        CartItem(
-                            id = doc.id,
-                            title = doc.getString("title") ?: "",
-                            price = priceStr,
-                            quantity = quantity,
-                            weight = doc.getString("weight") ?: "1kg",
-                            imageRes = doc.getLong("imageRes")?.toInt() ?: R.drawable.paws_corner_removebg_preview
-                        )
+                            CartItem(
+                                id = doc.id,
+                                title = doc.getString("title") ?: "",
+                                price = priceStr,
+                                quantity = quantity,
+                                weight = doc.getString("weight") ?: "1kg",
+                                imageRes = doc.getLong("imageRes")?.toInt() ?: R.drawable.paws_corner_removebg_preview
+                            )
+                        }
+                        cartItems = items
+                        subtotal = items.sumOf { (it.price.toIntOrNull() ?: 0) * it.quantity }
                     }
-                    cartItems = items
-                    subtotal = items.sumOf { (it.price.toIntOrNull() ?: 0) * it.quantity }
                 }
-            }
+        }
 
-        onDispose { listener.remove() }
+        onDispose { listener?.remove() }
     }
 
     val shippingCost = 25000
@@ -64,11 +67,12 @@ fun CartScreen(navController: NavController) {
     Scaffold(
         bottomBar = {
             if (cartItems.isNotEmpty()) {
-                Column(modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFFFFFFF))
-                    .padding(16.dp)
-                    .navigationBarsPadding()
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFFFFFFF))
+                        .padding(16.dp)
+                        .navigationBarsPadding()
                 ) {
                     Divider(
                         color = Color.Black,
@@ -88,16 +92,20 @@ fun CartScreen(navController: NavController) {
                     Spacer(Modifier.height(8.dp))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("Total", fontWeight = FontWeight.Bold)
-                        Text("Rp ${"%,d".format(total).replace(',', '.')}", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        Text(
+                            "Rp ${"%,d".format(total).replace(',', '.')}",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        )
                     }
                     Spacer(Modifier.height(12.dp))
                     Button(
                         onClick = { /* TODO: Handle Checkout */ },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp), // Tambahkan tinggi yang cukup
+                            .height(50.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3E68FF)) // Warna biru seperti di screenshot
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3E68FF))
                     ) {
                         Text(
                             text = "Checkout",
@@ -145,7 +153,7 @@ fun CartScreen(navController: NavController) {
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     items(cartItems) { item ->
-                        CartItemRow(item)
+                        CartItemRow(item, uid)
                     }
                 }
             }
@@ -154,8 +162,9 @@ fun CartScreen(navController: NavController) {
 }
 
 @Composable
-fun CartItemRow(item: CartItem) {
+fun CartItemRow(item: CartItem, uid: String?) {
     val db = FirebaseFirestore.getInstance()
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -176,17 +185,18 @@ fun CartItemRow(item: CartItem) {
             Text(text = item.title, fontWeight = FontWeight.Bold)
             Text(text = item.weight, fontSize = 12.sp, color = Color.Gray)
             Text(
-                text = "Rs ${item.price}.00 x ${item.quantity}",
+                text = "Rp ${item.price} x ${item.quantity}",
                 color = Color(0xFF43A047),
                 fontWeight = FontWeight.Bold
             )
         }
-        // Tombol Tambah & Kurang
+
         Column(horizontalAlignment = Alignment.End) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = {
-                    if (item.quantity > 1) {
-                        db.collection("cart").document(item.id)
+                    if (item.quantity > 1 && uid != null) {
+                        db.collection("users").document(uid).collection("cart")
+                            .document(item.id)
                             .update("quantity", item.quantity - 1)
                     }
                 }) {
@@ -194,15 +204,21 @@ fun CartItemRow(item: CartItem) {
                 }
                 Text("${item.quantity}", fontWeight = FontWeight.Bold)
                 TextButton(onClick = {
-                    db.collection("cart").document(item.id)
-                        .update("quantity", item.quantity + 1)
+                    if (uid != null) {
+                        db.collection("users").document(uid).collection("cart")
+                            .document(item.id)
+                            .update("quantity", item.quantity + 1)
+                    }
                 }) {
                     Text("+", fontSize = 18.sp)
                 }
             }
-            // Tombol Hapus
             IconButton(onClick = {
-                db.collection("cart").document(item.id).delete()
+                if (uid != null) {
+                    db.collection("users").document(uid).collection("cart")
+                        .document(item.id)
+                        .delete()
+                }
             }) {
                 Icon(Icons.Default.Delete, contentDescription = "Hapus", tint = Color.Red)
             }
