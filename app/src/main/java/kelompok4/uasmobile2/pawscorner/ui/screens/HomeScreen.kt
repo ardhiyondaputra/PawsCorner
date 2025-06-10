@@ -19,6 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.google.firebase.firestore.FirebaseFirestore
 import kelompok4.uasmobile2.pawscorner.R
@@ -127,7 +128,7 @@ fun HomeScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                HeaderSection(searchText) { searchText = it }
+                HeaderSection(searchText, { searchText = it }, navController)
                 CategorySection(selectedCategory) { selectedCategory = it }
 
                 when {
@@ -150,7 +151,7 @@ fun HomeScreen(
 }
 
 @Composable
-fun HeaderSection(searchText: String, onSearchChange: (String) -> Unit) {
+fun HeaderSection(searchText: String, onSearchChange: (String) -> Unit, navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -174,7 +175,12 @@ fun HeaderSection(searchText: String, onSearchChange: (String) -> Unit) {
                 Icon(
                     painter = painterResource(id = R.drawable.shopping_cart),
                     contentDescription = "Cart",
-                    modifier = Modifier.size(30.dp).padding(end = 12.dp)
+                    modifier = Modifier
+                        .size(30.dp)
+                        .padding(end = 12.dp)
+                        .clickable {
+                            navController.navigate("cart")
+                        }
                 )
             }
         }

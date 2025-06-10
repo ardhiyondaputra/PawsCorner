@@ -6,6 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import kelompok4.uasmobile2.pawscorner.ui.screens.CartScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.DetailProductScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.EditProfileScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.EmailVerificationScreen
@@ -112,6 +113,12 @@ fun AppNavGraph(
         ) { backStackEntry ->
             val documentId = backStackEntry.arguments?.getString("documentId") ?: return@composable
             DetailProductScreen(documentId = documentId, navController = navController)
+        }
+
+        composable("cart") {
+            CartScreen(
+                navController = navController
+            )
         }
     }
 }

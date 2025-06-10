@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "986907469933",
+    "project_id": "pawscorner-b5af6",
+    "storage_bucket": "pawscorner-b5af6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:986907469933:android:01efea42567c3c60b2f764",
+        "android_client_info": {
+          "package_name": "kelompok4.uasmobile2.pawscorner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBffpwr_x33g2-_OkN0PSCWeTSRj3gedPM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
