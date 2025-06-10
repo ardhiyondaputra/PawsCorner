@@ -133,15 +133,18 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                 Button(
                     onClick = {
                         val firestore = FirebaseFirestore.getInstance()
-                        val order = hashMapOf(
-                            "productId" to product.documentId,
-                            "title" to product.title,
-                            "price" to product.price,
-                            "imageRes" to product.imageRes,
-                            "quantity" to 1,
-                            "orderTime" to System.currentTimeMillis()
-                        )
-                        firestore.collection("orders").add(order)
+                        val uid = FirebaseAuth.getInstance().currentUser?.uid
+                        if (uid != null) {
+                            val order = hashMapOf(
+                                "productId" to product.documentId,
+                                "title" to product.title,
+                                "price" to product.price,
+                                "imageRes" to product.imageRes,
+                                "quantity" to 1,
+                                "orderTime" to System.currentTimeMillis()
+                            )
+                            firestore.collection("users").document(uid).collection("orders").add(order)
+                        }
                     },
                     modifier = Modifier
                         .weight(1f)

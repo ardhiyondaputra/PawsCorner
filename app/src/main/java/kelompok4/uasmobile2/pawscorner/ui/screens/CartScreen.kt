@@ -100,7 +100,33 @@ fun CartScreen(navController: NavController) {
                     }
                     Spacer(Modifier.height(12.dp))
                     Button(
-                        onClick = { /* TODO: Handle Checkout */ },
+                        onClick = {
+                            val firestore = FirebaseFirestore.getInstance()
+                            val uid = FirebaseAuth.getInstance().currentUser?.uid
+                            if (uid != null) {
+                                val cartRef = firestore.collection("users").document(uid).collection("cart")
+                                val ordersRef = firestore.collection("users").document(uid).collection("orders")
+
+                                // Ambil semua item di cart
+                                cartRef.get().addOnSuccessListener { snapshot ->
+                                    for (doc in snapshot.documents) {
+                                        val order = hashMapOf(
+                                            "productId" to doc.getString("productId"),
+                                            "title" to doc.getString("title"),
+                                            "price" to doc.getString("price"),
+                                            "imageRes" to doc.getLong("imageRes"),
+                                            "quantity" to doc.getLong("quantity"),
+                                            "orderTime" to System.currentTimeMillis()
+                                        )
+                                        ordersRef.add(order)
+                                    }
+                                    // Hapus semua item dari cart setelah checkout selesai
+                                    for (doc in snapshot.documents) {
+                                        doc.reference.delete()
+                                    }
+                                }
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
