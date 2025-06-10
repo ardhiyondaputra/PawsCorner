@@ -47,7 +47,7 @@ dependencies {
     implementation ("com.google.firebase:firebase-dynamic-links-ktx")
 
     // DataStore & ViewModel
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("androidx.datastore:datastore-preferences:1.1.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
 
     // Firebase BoM - Update ke versi terbaru untuk menghindari konflik
@@ -64,13 +64,13 @@ dependencies {
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
     //material
-    implementation ("androidx.compose.ui:ui:1.1.0") // Jetpack Compose UI
-    implementation ("androidx.compose.material:material:1.1.0") // Material Components untuk Compose
-    implementation ("androidx.compose.material3:material3:1.0.0") // Material3 (jika Anda ingin menggunakannya)
-    implementation ("androidx.compose.ui:ui-tooling-preview:1.1.0") // Untuk preview composable functions
-    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.3.1") // Untuk lifecycle-aware components
+    implementation ("androidx.compose.ui:ui:1.8.2") // Jetpack Compose UI
+    implementation ("androidx.compose.material:material:1.8.2") // Material Components untuk Compose
+    implementation ("androidx.compose.material3:material3:1.3.2") // Material3 (jika Anda ingin menggunakannya)
+    implementation ("androidx.compose.ui:ui-tooling-preview:1.8.2") // Untuk preview composable functions
+    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.9.1") // Untuk lifecycle-aware components
     implementation ("androidx.navigation:navigation-compose:2.4.0") // Untuk navigation di Compose
-    implementation ("androidx.compose.material:material-icons-extended:1.3.1")
+    implementation ("androidx.compose.material:material-icons-extended:1.7.8")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

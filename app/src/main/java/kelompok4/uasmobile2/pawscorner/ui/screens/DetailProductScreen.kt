@@ -1,5 +1,8 @@
 package kelompok4.uasmobile2.pawscorner.ui.screens
 
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import androidx.compose.material.icons.filled.Check
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -23,6 +26,7 @@ import kelompok4.uasmobile2.pawscorner.R
 import kelompok4.uasmobile2.pawscorner.data.Product
 import kotlinx.coroutines.tasks.await
 import androidx.compose.material.icons.filled.Payment
+import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.auth.FirebaseAuth
 
 @SuppressLint("DefaultLocale")
@@ -87,6 +91,10 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // TOMBOL TAMBAH KE KERANJANG
+                val context = LocalContext.current
+                val coroutineScope = rememberCoroutineScope()
+                var addedToCart by remember { mutableStateOf(false) }
+
                 Button(
                     onClick = {
                         val auth = FirebaseAuth.getInstance()
@@ -106,6 +114,13 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                                 .document(uid)
                                 .collection("cart")
                                 .add(cartItem)
+                                .addOnSuccessListener {
+                                    addedToCart = true
+                                    coroutineScope.launch {
+                                        delay(1500)
+                                        addedToCart = false
+                                    }
+                                }
                         }
                     },
                     modifier = Modifier
@@ -114,20 +129,37 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD0E8FF)),
                     shape = RoundedCornerShape(24.dp)
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.shopping_cart),
-                        contentDescription = null,
-                        tint = Color(0xFF0D47A1),
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Keranjang",
-                        color = Color(0xFF0D47A1),
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp
-                    )
+                    if (addedToCart) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = Color(0xFF0D47A1),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Ditambahkan",
+                            color = Color(0xFF0D47A1),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp
+                        )
+                    } else {
+                        Icon(
+                            painter = painterResource(id = R.drawable.shopping_cart),
+                            contentDescription = null,
+                            tint = Color(0xFF0D47A1),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Keranjang",
+                            color = Color(0xFF0D47A1),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp
+                        )
+                    }
                 }
+
 
                 // TOMBOL BELI SEKARANG
                 Button(
