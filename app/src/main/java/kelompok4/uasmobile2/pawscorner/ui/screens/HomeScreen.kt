@@ -188,7 +188,7 @@ fun HeaderSection(searchText: String, onSearchChange: (String) -> Unit, navContr
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Search Food, Toy, Etc",
+            text = "Cari Makanan, Mainan, DLL",
             fontWeight = FontWeight.Bold,
             fontSize = 16.sp,
             color = Color.Black
@@ -261,7 +261,7 @@ fun CategorySection(selectedCategory: String, onCategorySelected: (String) -> Un
 @Composable
 fun RecommendedSection(products: List<Product>, navController: NavHostController) {
     Text(
-        text = "Recommended Product",
+        text = "Produk Rekomendasi",
         fontWeight = FontWeight.Bold,
         fontSize = 16.sp,
         modifier = Modifier.padding(start = 16.dp, top = 8.dp)

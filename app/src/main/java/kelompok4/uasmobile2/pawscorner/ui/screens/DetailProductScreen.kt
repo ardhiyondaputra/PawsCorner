@@ -163,21 +163,7 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
 
                 // TOMBOL BELI SEKARANG
                 Button(
-                    onClick = {
-                        val firestore = FirebaseFirestore.getInstance()
-                        val uid = FirebaseAuth.getInstance().currentUser?.uid
-                        if (uid != null) {
-                            val order = hashMapOf(
-                                "productId" to product.documentId,
-                                "title" to product.title,
-                                "price" to product.price,
-                                "imageRes" to product.imageRes,
-                                "quantity" to 1,
-                                "orderTime" to System.currentTimeMillis()
-                            )
-                            firestore.collection("users").document(uid).collection("orders").add(order)
-                        }
-                    },
+                    onClick = { navController.navigate("payment/orders") },
                     modifier = Modifier
                         .weight(1f)
                         .height(56.dp),

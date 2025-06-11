@@ -14,6 +14,7 @@ import kelompok4.uasmobile2.pawscorner.ui.screens.LoginScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.RegisterScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.HomeScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.NotificationScreen
+import kelompok4.uasmobile2.pawscorner.ui.screens.PaymentScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.ProfileDetailScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.ProfileScreen
 import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
@@ -97,6 +98,20 @@ fun AppNavGraph(
                 addressViewModel = addressViewModel // Pass the AddressViewModel here
             )
         }
+
+        composable(
+            route = "payment/{productId}",
+            arguments = listOf(navArgument("productId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val productId = backStackEntry.arguments?.getString("productId") ?: ""
+            PaymentScreen(
+                productId = productId,
+                navController = navController,
+                addressViewModel = addressViewModel
+            )
+        }
+
+
 
         composable("edit_address/{addressId}") { backStackEntry ->
             val addressId = backStackEntry.arguments?.getString("addressId") ?: ""

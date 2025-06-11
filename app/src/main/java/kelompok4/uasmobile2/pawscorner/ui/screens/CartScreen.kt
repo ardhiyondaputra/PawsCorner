@@ -60,9 +60,9 @@ fun CartScreen(navController: NavController) {
         onDispose { listener?.remove() }
     }
 
-    val shippingCost = 25000
+
     val serviceFee = 10000
-    val total = subtotal + shippingCost + serviceFee
+    val total = subtotal + serviceFee
 
     Scaffold(
         bottomBar = {
@@ -107,8 +107,9 @@ fun CartScreen(navController: NavController) {
                                 val cartRef = firestore.collection("users").document(uid).collection("cart")
                                 val ordersRef = firestore.collection("users").document(uid).collection("orders")
 
-                                // Ambil semua item di cart
                                 cartRef.get().addOnSuccessListener { snapshot ->
+                                    if (snapshot.isEmpty) return@addOnSuccessListener
+
                                     for (doc in snapshot.documents) {
                                         val order = hashMapOf(
                                             "productId" to doc.getString("productId"),
@@ -120,10 +121,21 @@ fun CartScreen(navController: NavController) {
                                         )
                                         ordersRef.add(order)
                                     }
-                                    // Hapus semua item dari cart setelah checkout selesai
+
+                                    // Setelah berhasil checkout dan hapus cart
                                     for (doc in snapshot.documents) {
                                         doc.reference.delete()
                                     }
+
+                                    // Navigasi ke halaman payment
+                                    val firstProductId = snapshot.documents.firstOrNull()?.getString("productId")
+                                    if (firstProductId != null) {
+                                        navController.navigate("payment/$firstProductId")
+                                    } else {
+                                        // fallback jika tidak ada productId
+                                        navController.navigate("payment/unknown")
+                                    }
+
                                 }
                             }
                         },
@@ -140,6 +152,7 @@ fun CartScreen(navController: NavController) {
                             fontWeight = FontWeight.Bold
                         )
                     }
+
                 }
             }
         }
