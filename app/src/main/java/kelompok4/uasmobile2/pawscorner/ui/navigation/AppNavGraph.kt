@@ -14,6 +14,7 @@ import kelompok4.uasmobile2.pawscorner.ui.screens.LoginScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.RegisterScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.HomeScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.NotificationScreen
+import kelompok4.uasmobile2.pawscorner.ui.screens.OrderStatusScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.PaymentScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.PaymentSuccessScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.ProfileDetailScreen
@@ -140,5 +141,9 @@ fun AppNavGraph(
         composable("payment_success_screen") {
             PaymentSuccessScreen(navController)
         }
+
+        composable("status_order_screen") {
+            OrderStatusScreen(navController)
+            }
     }
 }
