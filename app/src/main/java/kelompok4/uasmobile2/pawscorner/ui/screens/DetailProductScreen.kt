@@ -107,7 +107,8 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                                 "title" to product.title,
                                 "price" to product.price,
                                 "imageRes" to product.imageRes,
-                                "quantity" to 1
+                                "quantity" to 1,
+                                "primary" to false
                             )
 
                             firestore.collection("users")

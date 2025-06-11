@@ -125,7 +125,9 @@ fun ProfileScreen(
                 icon = R.drawable.paws_corner_removebg_preview,
                 title = "Status Pesanan",
                 desc = ""
-            ) {}
+            ) {
+                navController.navigate("status_order_screen")
+            }
 
             ProfileOption(
                 icon = R.drawable.paws_corner_removebg_preview,

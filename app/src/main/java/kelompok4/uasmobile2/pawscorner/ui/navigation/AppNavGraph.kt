@@ -15,6 +15,7 @@ import kelompok4.uasmobile2.pawscorner.ui.screens.RegisterScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.HomeScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.NotificationScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.PaymentScreen
+import kelompok4.uasmobile2.pawscorner.ui.screens.PaymentSuccessScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.ProfileDetailScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.ProfileScreen
 import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
@@ -134,6 +135,10 @@ fun AppNavGraph(
             CartScreen(
                 navController = navController
             )
+        }
+
+        composable("payment_success_screen") {
+            PaymentSuccessScreen(navController)
         }
     }
 }

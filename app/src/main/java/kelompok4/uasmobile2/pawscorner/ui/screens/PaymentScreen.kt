@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,7 +49,7 @@ fun PaymentHeader(onBack: () -> Unit) {
         ) {
             IconButton(onClick = onBack) {
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
                     tint = Color.White
                 )
@@ -63,11 +63,10 @@ fun PaymentHeader(onBack: () -> Unit) {
                 textAlign = TextAlign.Center,
                 modifier = Modifier.weight(1f)
             )
-            Spacer(modifier = Modifier.width(48.dp)) // kanan kosong untuk keseimbangan
+            Spacer(modifier = Modifier.width(48.dp))
         }
     }
 }
-
 
 @Composable
 fun PaymentScreen(
@@ -75,7 +74,6 @@ fun PaymentScreen(
     navController: NavHostController,
     productId: String
 ) {
-    val context = LocalContext.current
     val firestore = Firebase.firestore
     val uid = FirebaseAuth.getInstance().currentUser?.uid
 
@@ -90,9 +88,12 @@ fun PaymentScreen(
     var totalItems by remember { mutableStateOf(0) }
     var totalPrice by remember { mutableStateOf(0) }
 
+    var showExitConfirmation by remember { mutableStateOf(false) }
+
     LaunchedEffect(uid) {
         uid?.let {
             firestore.collection("users").document(it).collection("orders")
+                .whereEqualTo("primary", true)
                 .get()
                 .addOnSuccessListener { result ->
                     if (!result.isEmpty) {
@@ -114,7 +115,7 @@ fun PaymentScreen(
                         totalItems = itemCount
                         totalPrice = total
                     } else {
-                        uploadStatus = "Tidak ada data order ditemukan."
+                        uploadStatus = "Tidak ada pesanan untuk dibayar."
                     }
                 }
                 .addOnFailureListener {
@@ -132,14 +133,11 @@ fun PaymentScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        PaymentHeader(onBack = { navController.popBackStack() })
+        PaymentHeader(onBack = { showExitConfirmation = true })
 
         Column(modifier = Modifier.padding(16.dp)) {
-            // Detail Transaksi
             Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
+                modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.medium,
                 shadowElevation = 4.dp,
                 tonalElevation = 2.dp,
@@ -153,22 +151,17 @@ fun PaymentScreen(
                     products.forEach { Text(it) }
 
                     Spacer(modifier = Modifier.height(8.dp))
-
                     Text("Jumlah: $totalItems")
-
                     Spacer(modifier = Modifier.height(8.dp))
-
                     Text("Total: Rp ${"%,d".format(totalPrice).replace(',', '.')}")
-
                     Spacer(modifier = Modifier.height(8.dp))
-
                     Text("ID Transaksi: $transactionId")
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
             Text("Pilih Metode Pembayaran", fontWeight = FontWeight.Bold)
-            Text("Silahkan Bayarkan Dengan Transfer Pada Nomor Yang Tertera",fontWeight = FontWeight.Light)
+            Text("Silahkan Bayarkan Dengan Transfer Pada Nomor Yang Tertera", fontWeight = FontWeight.Light)
             Spacer(modifier = Modifier.height(8.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -181,12 +174,11 @@ fun PaymentScreen(
                 ) {
                     Text("DANA", color = Color.White)
                 }
-
                 Button(
                     onClick = { selectedMethod = "BRI" },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selectedMethod == "BRI") Color(0xFF757575) else Color.Gray
+                        containerColor = if (selectedMethod == "BRI") Color(0xFF3F51B5) else Color.Gray
                     )
                 ) {
                     Text("BRI", color = Color.White)
@@ -203,8 +195,7 @@ fun PaymentScreen(
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedButton(
                 onClick = { launcher.launch("image/*") },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = true
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Upload Bukti Pembayaran")
             }
@@ -222,7 +213,22 @@ fun PaymentScreen(
                         return@Button
                     }
 
-                    uploadStatus = "Data siap dikirim (belum implement upload)."
+                    uid?.let {
+                        firestore.collection("users").document(it).collection("orders")
+                            .whereEqualTo("primary", true)
+                            .get()
+                            .addOnSuccessListener { snapshot ->
+                                for (doc in snapshot.documents) {
+                                    doc.reference.update("primary", false)
+                                }
+                                navController.navigate("payment_success_screen") {
+                                    popUpTo("payment_screen") { inclusive = true }
+                                }
+                            }
+                            .addOnFailureListener {
+                                uploadStatus = "Gagal mengupdate pesanan."
+                            }
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -238,5 +244,39 @@ fun PaymentScreen(
                 Text(it, color = if (it.contains("berhasil")) Color.Green else Color.Red)
             }
         }
+    }
+
+    if (showExitConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showExitConfirmation = false },
+            title = { Text("Batalkan Pembayaran?") },
+            text = { Text("Pesanan Anda akan dibatalkan dan dihapus. Anda yakin ingin keluar?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showExitConfirmation = false
+                    uid?.let {
+                        firestore.collection("users").document(it).collection("orders")
+                            .whereEqualTo("primary", true)
+                            .get()
+                            .addOnSuccessListener { snapshot ->
+                                for (doc in snapshot.documents) {
+                                    doc.reference.delete()
+                                }
+                                navController.popBackStack()
+                            }
+                            .addOnFailureListener {
+                                uploadStatus = "Gagal menghapus pesanan."
+                            }
+                    }
+                }) {
+                    Text("Ya")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showExitConfirmation = false }) {
+                    Text("Tidak")
+                }
+            }
+        )
     }
 }

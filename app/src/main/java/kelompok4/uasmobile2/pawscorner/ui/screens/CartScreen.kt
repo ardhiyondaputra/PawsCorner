@@ -117,14 +117,10 @@ fun CartScreen(navController: NavController) {
                                             "price" to doc.getString("price"),
                                             "imageRes" to doc.getLong("imageRes"),
                                             "quantity" to doc.getLong("quantity"),
-                                            "orderTime" to System.currentTimeMillis()
+                                            "orderTime" to System.currentTimeMillis(),
+                                            "primary" to true
                                         )
                                         ordersRef.add(order)
-                                    }
-
-                                    // Setelah berhasil checkout dan hapus cart
-                                    for (doc in snapshot.documents) {
-                                        doc.reference.delete()
                                     }
 
                                     // Navigasi ke halaman payment
@@ -132,10 +128,8 @@ fun CartScreen(navController: NavController) {
                                     if (firstProductId != null) {
                                         navController.navigate("payment/$firstProductId")
                                     } else {
-                                        // fallback jika tidak ada productId
                                         navController.navigate("payment/unknown")
                                     }
-
                                 }
                             }
                         },
