@@ -71,6 +71,9 @@ dependencies {
     implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.9.1") // Untuk lifecycle-aware components
     implementation ("androidx.navigation:navigation-compose:2.4.0") // Untuk navigation di Compose
     implementation ("androidx.compose.material:material-icons-extended:1.7.8")
+    implementation ("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
+    implementation ("com.github.bumptech.glide:compose:1.0.0-beta01")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

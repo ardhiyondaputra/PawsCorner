@@ -1,8 +1,5 @@
 package kelompok4.uasmobile2.pawscorner.ui.screens
 
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
-import androidx.compose.material.icons.filled.Check
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -11,23 +8,28 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kelompok4.uasmobile2.pawscorner.R
 import kelompok4.uasmobile2.pawscorner.data.Product
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
-import androidx.compose.material.icons.filled.Payment
-import androidx.compose.ui.platform.LocalContext
-import com.google.firebase.auth.FirebaseAuth
 
 @SuppressLint("DefaultLocale")
 @Composable
@@ -43,6 +45,7 @@ fun DetailProductScreen(documentId: String, navController: NavHostController) {
                 .document(documentId).get().await()
 
             if (doc.exists()) {
+                val imageUrl = doc.getString("imageUrl") ?: ""
                 product = Product(
                     title = doc.getString("title") ?: "",
                     weight = doc.getString("weight") ?: "",
@@ -52,10 +55,12 @@ fun DetailProductScreen(documentId: String, navController: NavHostController) {
                     } ?: "",
                     quantity = doc.getLong("quantity")?.toInt() ?: 1,
                     description = doc.getString("description") ?: "",
-                    imageRes = R.drawable.paws_corner_removebg_preview,
+                    imageUrl = imageUrl,
                     documentId = documentId
                 )
-            } else error = "Produk tidak ditemukan"
+            } else {
+                error = "Produk tidak ditemukan"
+            }
         } catch (e: Exception) {
             error = "Gagal mengambil produk: ${e.message}"
         } finally {
@@ -67,31 +72,27 @@ fun DetailProductScreen(documentId: String, navController: NavHostController) {
         isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
-
         error != null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(text = error!!, color = Color.Red)
         }
-
         product != null -> {
             DetailProductContent(product!!, navController)
         }
     }
 }
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun DetailProductContent(product: Product, navController: NavHostController) {
     Scaffold(
         bottomBar = {
-            // BUTTON AREA - SEJAJAR KANAN KIRI
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
-                    .padding(bottom = 50.dp), // Posisi lebih tinggi dari bawah
+                    .padding(bottom = 50.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // TOMBOL TAMBAH KE KERANJANG
-                val context = LocalContext.current
                 val coroutineScope = rememberCoroutineScope()
                 var addedToCart by remember { mutableStateOf(false) }
 
@@ -106,7 +107,7 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                                 "productId" to product.documentId,
                                 "title" to product.title,
                                 "price" to product.price,
-                                "imageRes" to product.imageRes,
+                                "imageUrl" to product.imageUrl, // Perbarui ke imageUrl
                                 "quantity" to 1,
                                 "primary" to false
                             )
@@ -161,8 +162,6 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                     }
                 }
 
-
-                // TOMBOL BELI SEKARANG
                 Button(
                     onClick = { navController.navigate("payment/orders") },
                     modifier = Modifier
@@ -194,19 +193,17 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            // HEADER
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 16.dp)
-                    .height(56.dp), // tinggi tetap untuk menyusun komponen
+                    .height(56.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "Detail Produk",
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                 )
-
                 IconButton(
                     onClick = { navController.popBackStack() },
                     modifier = Modifier.align(Alignment.CenterStart)
@@ -218,9 +215,8 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                 }
             }
 
-            // IMAGE
-            Image(
-                painter = painterResource(id = product.imageRes),
+            GlideImage(
+                model = product.imageUrl,
                 contentDescription = product.title,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -230,28 +226,21 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // INFORMASI PRODUK
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Text(text = product.title, fontWeight = FontWeight.Bold, fontSize = 22.sp)
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(text = "Kategori: ${product.category}", color = Color.Gray, fontSize = 14.sp)
                 Text(text = "Berat: ${product.weight}", color = Color.Gray, fontSize = 14.sp)
-
                 Spacer(modifier = Modifier.height(8.dp))
-
                 Text(
                     text = product.price,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF2E7D32)
                 )
-
                 Spacer(modifier = Modifier.height(16.dp))
-
                 Text("Deskripsi:", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                 Text(product.description ?: "-", fontSize = 14.sp)
-
-                // Tambah ruang ekstra agar konten tidak tertutup button
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }

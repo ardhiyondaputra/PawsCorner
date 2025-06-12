@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.google.firebase.firestore.FirebaseFirestore
 import kelompok4.uasmobile2.pawscorner.R
 import kelompok4.uasmobile2.pawscorner.data.Product
@@ -56,20 +58,13 @@ fun HomeScreen(
                     val quantity = document.getLong("quantity")?.toInt() ?: 0
                     val description = document.getString("description") ?: ""
                     val documentId = document.id
-
-                    val imageRes = when (category.lowercase()) {
-                        "makanan" -> R.drawable.paws_corner_removebg_preview
-                        "mainan" -> R.drawable.paws_corner_removebg_preview
-                        "obat" -> R.drawable.paws_corner_removebg_preview
-                        "kebersihan" -> R.drawable.paws_corner_removebg_preview
-                        else -> R.drawable.paws_corner_removebg_preview
-                    }
+                    val imageUrl = document.getString("imageUrl") ?: ""
 
                     Product(
                         title = title,
                         weight = weight,
                         category = category,
-                        imageRes = imageRes,
+                        imageUrl = imageUrl,
                         price = price,
                         quantity = quantity,
                         description = description,
@@ -202,7 +197,7 @@ fun HeaderSection(searchText: String, onSearchChange: (String) -> Unit, navContr
             placeholder = { Text("Search", fontSize = 18.sp) },
             leadingIcon = {
                 Icon(
-                    painter = painterResource(id = R.drawable.search__1_  ),
+                    painter = painterResource(id = R.drawable.search__1_),
                     contentDescription = "Search",
                     modifier = Modifier.size(24.dp)
                 )
@@ -220,8 +215,6 @@ fun HeaderSection(searchText: String, onSearchChange: (String) -> Unit, navContr
         )
     }
 }
-
-
 
 @Composable
 fun CategorySection(selectedCategory: String, onCategorySelected: (String) -> Unit) {
@@ -258,6 +251,7 @@ fun CategorySection(selectedCategory: String, onCategorySelected: (String) -> Un
     }
 }
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun RecommendedSection(products: List<Product>, navController: NavHostController) {
     Text(
@@ -292,8 +286,8 @@ fun RecommendedSection(products: List<Product>, navController: NavHostController
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Image(
-                            painter = painterResource(id = product.imageRes),
+                        GlideImage(
+                            model = product.imageUrl,
                             contentDescription = product.title,
                             modifier = Modifier.size(80.dp)
                         )
