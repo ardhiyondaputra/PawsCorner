@@ -10,6 +10,7 @@ import kelompok4.uasmobile2.pawscorner.ui.screens.CartScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.DetailProductScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.EditProfileScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.EmailVerificationScreen
+import kelompok4.uasmobile2.pawscorner.ui.screens.ForgotPasswordScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.LoginScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.RegisterScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.HomeScreen
@@ -113,8 +114,6 @@ fun AppNavGraph(
             )
         }
 
-
-
         composable("edit_address/{addressId}") { backStackEntry ->
             val addressId = backStackEntry.arguments?.getString("addressId") ?: ""
             AddAddressScreen(
@@ -144,6 +143,10 @@ fun AppNavGraph(
 
         composable("status_order_screen") {
             OrderStatusScreen(navController)
-            }
+        }
+
+        composable("forgot_password") {
+            ForgotPasswordScreen(navController, authViewModel)
+        }
     }
 }

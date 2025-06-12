@@ -17,14 +17,7 @@ import androidx.navigation.NavHostController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-
-data class Order(
-    val id: String = "",
-    val title: String = "",
-    val quantity: Int = 1,
-    val price: Int = 0,
-    val status: String = "Diproses"
-)
+import kelompok4.uasmobile2.pawscorner.data.Order
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

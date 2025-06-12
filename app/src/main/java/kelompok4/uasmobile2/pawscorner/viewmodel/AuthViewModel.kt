@@ -19,6 +19,7 @@ sealed class AuthState {
     object Success : AuthState()
     object EmailVerificationSent : AuthState()
     object EmailNotVerified : AuthState()
+    object PasswordResetEmailSent : AuthState()
     data class Error(val message: String) : AuthState()
 }
 
@@ -220,6 +221,17 @@ class AuthViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e(TAG, "Error resending email verification", e)
                 _authState.value = AuthState.Error("Gagal mengirim ulang email verifikasi")
+            }
+        }
+    }
+
+    fun sendPasswordResetEmail(email: String) {
+        viewModelScope.launch {
+            try {
+                FirebaseAuth.getInstance().sendPasswordResetEmail(email).await()
+                _authState.value = AuthState.PasswordResetEmailSent
+            } catch (e: Exception) {
+                _authState.value = AuthState.Error(e.message ?: "Gagal mengirim email reset")
             }
         }
     }
