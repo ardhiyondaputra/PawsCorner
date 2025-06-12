@@ -1,5 +1,6 @@
 package kelompok4.uasmobile2.pawscorner.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -29,6 +30,7 @@ fun OrderStatusScreen(navController: NavHostController) {
 
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("Diproses", "Dikirim", "Selesai")
+
 
     LaunchedEffect(uid) {
         uid?.let {
@@ -101,7 +103,11 @@ fun OrderStatusScreen(navController: NavHostController) {
                     ) {
                         items(filteredOrders) { order ->
                             Card(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        navController.navigate("detail_status/${order.id}")
+                                    },
                                 colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5)),
                                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                             ) {
@@ -110,12 +116,19 @@ fun OrderStatusScreen(navController: NavHostController) {
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text("Jumlah: ${order.quantity}")
                                     Text("Harga: Rp ${"%,d".format(order.price).replace(',', '.')}")
+
+                                    val serviceFee = 10000
+                                    val totalWithFee = (order.price * order.quantity) + serviceFee
+
+                                    Text("Biaya Layanan: Rp ${"%,d".format(serviceFee).replace(',', '.')}")
+                                    Text("Total: Rp ${"%,d".format(totalWithFee).replace(',', '.')}", fontWeight = FontWeight.Bold)
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text("Status: ${order.status}", color = Color(0xFF4CAF50), fontWeight = FontWeight.SemiBold)
                                 }
                             }
                         }
                     }
+
                 }
             }
         }

@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import kelompok4.uasmobile2.pawscorner.ui.screens.CartScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.DetailProductScreen
+import kelompok4.uasmobile2.pawscorner.ui.screens.DetailStatusScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.EditProfileScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.EmailVerificationScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.ForgotPasswordScreen
@@ -148,5 +149,11 @@ fun AppNavGraph(
         composable("forgot_password") {
             ForgotPasswordScreen(navController, authViewModel)
         }
+
+        composable("detail_status/{orderId}") { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
+            DetailStatusScreen(navController, orderId, addressViewModel)
+        }
+
     }
 }

@@ -33,6 +33,7 @@ fun generateTransactionId(): String {
     return "TRX${date}_$random"
 }
 
+
 @Composable
 fun PaymentHeader(onBack: () -> Unit) {
     Box(
@@ -87,11 +88,19 @@ fun PaymentScreen(
     var products by remember { mutableStateOf<List<String>>(emptyList()) }
     var totalItems by remember { mutableStateOf(0) }
     var totalPrice by remember { mutableStateOf(0) }
+    val serviceFee = 10000
+    val totalWithServiceFee = totalPrice + serviceFee
+    val addresses by addressViewModel.addresses.collectAsState()
+    val selectedAddress = addresses.firstOrNull()?.second
+
+
 
     var showExitConfirmation by remember { mutableStateOf(false) }
 
     LaunchedEffect(uid) {
         uid?.let {
+            addressViewModel.loadAddresses()
+
             firestore.collection("users").document(it).collection("orders")
                 .whereEqualTo("primary", true)
                 .get()
@@ -108,7 +117,7 @@ fun PaymentScreen(
 
                             itemCount += qty
                             total += price * qty
-                            tempList.add("• $title")
+                            tempList.add("• $title (x$qty)")
                         }
 
                         products = tempList
@@ -153,13 +162,34 @@ fun PaymentScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("Jumlah: $totalItems")
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Total: Rp ${"%,d".format(totalPrice).replace(',', '.')}")
+                    Text("Subtotal: Rp ${"%,d".format(totalPrice).replace(',', '.')}")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Biaya Layanan: Rp ${"%,d".format(serviceFee).replace(',', '.')}")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Total: Rp ${"%,d".format(totalWithServiceFee).replace(',', '.')}", fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("ID Transaksi: $transactionId")
+
+                    selectedAddress?.let { address ->
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Divider()
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Alamat Pengiriman", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(address.name)
+                        Text(address.address)
+                        Text("${address.village}, ${address.district}")
+                        Text("${address.regency}, ${address.province}")
+                    }
+
                 }
             }
 
+
+
+
             Spacer(modifier = Modifier.height(16.dp))
+
             Text("Pilih Metode Pembayaran", fontWeight = FontWeight.Bold)
             Text("Silahkan Bayarkan Dengan Transfer Pada Nomor Yang Tertera", fontWeight = FontWeight.Light)
             Spacer(modifier = Modifier.height(8.dp))
