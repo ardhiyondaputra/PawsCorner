@@ -20,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -41,6 +43,7 @@ fun CartScreen(navController: NavController) {
                         val items = it.documents.mapNotNull { doc ->
                             val priceStr = doc.getString("price")?.replace(Regex("[^\\d]"), "") ?: "0"
                             val quantity = doc.getLong("quantity")?.toInt() ?: 1
+                            val imageUrl = doc.getString("imageUrl") ?: "" // Ambil imageUrl dari Firestore
 
                             CartItem(
                                 id = doc.id,
@@ -48,7 +51,7 @@ fun CartScreen(navController: NavController) {
                                 price = priceStr,
                                 quantity = quantity,
                                 weight = doc.getString("weight") ?: "1kg",
-                                imageRes = doc.getLong("imageRes")?.toInt() ?: R.drawable.paws_corner_removebg_preview
+                                imageUrl = imageUrl
                             )
                         }
                         cartItems = items
@@ -59,7 +62,6 @@ fun CartScreen(navController: NavController) {
 
         onDispose { listener?.remove() }
     }
-
 
     val serviceFee = 10000
     val total = subtotal + serviceFee
@@ -115,7 +117,7 @@ fun CartScreen(navController: NavController) {
                                             "productId" to doc.getString("productId"),
                                             "title" to doc.getString("title"),
                                             "price" to doc.getString("price"),
-                                            "imageRes" to doc.getLong("imageRes"),
+                                            "imageUrl" to doc.getString("imageUrl"), // Ganti imageRes dengan imageUrl
                                             "quantity" to doc.getLong("quantity"),
                                             "orderTime" to System.currentTimeMillis(),
                                             "primary" to true
@@ -123,7 +125,6 @@ fun CartScreen(navController: NavController) {
                                         ordersRef.add(order)
                                     }
 
-                                    // Navigasi ke halaman payment
                                     val firstProductId = snapshot.documents.firstOrNull()?.getString("productId")
                                     if (firstProductId != null) {
                                         navController.navigate("payment/$firstProductId")
@@ -146,7 +147,6 @@ fun CartScreen(navController: NavController) {
                             fontWeight = FontWeight.Bold
                         )
                     }
-
                 }
             }
         }
@@ -194,6 +194,7 @@ fun CartScreen(navController: NavController) {
     }
 }
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun CartItemRow(item: CartItem, uid: String?) {
     val db = FirebaseFirestore.getInstance()
@@ -206,12 +207,12 @@ fun CartItemRow(item: CartItem, uid: String?) {
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
-            painter = painterResource(id = item.imageRes),
-            contentDescription = null,
+        GlideImage(
+            model = item.imageUrl,
+            contentDescription = item.title,
             modifier = Modifier
-                .size(64.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .size(72.dp)
+                .clip(RoundedCornerShape(10.dp))
         )
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
