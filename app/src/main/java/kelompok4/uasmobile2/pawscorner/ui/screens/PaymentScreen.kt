@@ -14,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -72,8 +71,7 @@ fun PaymentHeader(onBack: () -> Unit) {
 @Composable
 fun PaymentScreen(
     addressViewModel: AddressViewModel,
-    navController: NavHostController,
-    productId: String
+    navController: NavHostController
 ) {
     val firestore = Firebase.firestore
     val uid = FirebaseAuth.getInstance().currentUser?.uid
@@ -86,8 +84,8 @@ fun PaymentScreen(
     var uploadStatus by remember { mutableStateOf<String?>(null) }
 
     var products by remember { mutableStateOf<List<String>>(emptyList()) }
-    var totalItems by remember { mutableStateOf(0) }
-    var totalPrice by remember { mutableStateOf(0) }
+    var totalItems by remember { mutableIntStateOf(0) }
+    var totalPrice by remember { mutableIntStateOf(0) }
     val serviceFee = 10000
     val totalWithServiceFee = totalPrice + serviceFee
     val addresses by addressViewModel.addresses.collectAsState()
@@ -112,7 +110,7 @@ fun PaymentScreen(
 
                         for (doc in result.documents) {
                             val title = doc.getString("title") ?: "Produk"
-                            val price = doc.getString("price")?.replace(Regex("[^\\d]"), "")?.toIntOrNull() ?: 0
+                            val price = doc.getString("price")?.replace(Regex("\\D"), "")?.toIntOrNull() ?: 0
                             val qty = doc.getLong("quantity")?.toInt() ?: 1
 
                             itemCount += qty
@@ -185,9 +183,6 @@ fun PaymentScreen(
                 }
             }
 
-
-
-
             Spacer(modifier = Modifier.height(16.dp))
 
             Text("Pilih Metode Pembayaran", fontWeight = FontWeight.Bold)
@@ -246,12 +241,28 @@ fun PaymentScreen(
                     uid?.let { userId ->
                         val ordersRef = firestore.collection("users").document(userId).collection("orders")
                         val cartRef = firestore.collection("users").document(userId).collection("cart")
+                        val productsRef = firestore.collection("products")
 
                         ordersRef.whereEqualTo("primary", true)
                             .get()
                             .addOnSuccessListener { snapshot ->
                                 for (doc in snapshot.documents) {
                                     doc.reference.update("primary", false)
+
+                                    // Kurangi stok produk
+                                    val productId = doc.getString("productId")
+                                    val quantity = doc.getLong("quantity")?.toInt() ?: 0
+
+                                    if (!productId.isNullOrEmpty() && quantity > 0) {
+                                        val productDocRef = productsRef.document(productId)
+                                        productDocRef.get()
+                                            .addOnSuccessListener { productSnapshot ->
+                                                val currentStock = productSnapshot.getLong("stock")?.toInt() ?: 0
+                                                val newStock = (currentStock - quantity).coerceAtLeast(0)
+
+                                                productDocRef.update("stock", newStock)
+                                            }
+                                    }
                                 }
 
                                 // Hapus semua item dari cart
@@ -261,7 +272,6 @@ fun PaymentScreen(
                                             cartDoc.reference.delete()
                                         }
 
-                                        // Navigasi ke halaman sukses setelah cart dihapus
                                         navController.navigate("payment_success_screen") {
                                             popUpTo("payment_screen") { inclusive = true }
                                         }

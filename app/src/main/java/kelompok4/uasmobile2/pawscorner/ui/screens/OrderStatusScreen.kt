@@ -28,7 +28,7 @@ fun OrderStatusScreen(navController: NavHostController) {
     var orders by remember { mutableStateOf<List<Order>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Diproses", "Dikirim", "Selesai")
 
 
@@ -42,7 +42,7 @@ fun OrderStatusScreen(navController: NavHostController) {
                             id = doc.id,
                             title = doc.getString("title") ?: "Produk",
                             quantity = doc.getLong("quantity")?.toInt() ?: 1,
-                            price = doc.getString("price")?.replace(Regex("[^\\d]"), "")?.toIntOrNull() ?: 0,
+                            price = doc.getString("price")?.replace(Regex("\\D"), "")?.toIntOrNull() ?: 0,
                             status = doc.getString("status") ?: "Diproses"
                         )
                     }

@@ -60,8 +60,7 @@ fun AppNavGraph(
 
         composable("home") {
             HomeScreen(
-                navController = navController,
-                authViewModel = authViewModel
+                navController = navController
             )
         }
 
@@ -109,7 +108,6 @@ fun AppNavGraph(
         ) { backStackEntry ->
             val productId = backStackEntry.arguments?.getString("productId") ?: ""
             PaymentScreen(
-                productId = productId,
                 navController = navController,
                 addressViewModel = addressViewModel
             )

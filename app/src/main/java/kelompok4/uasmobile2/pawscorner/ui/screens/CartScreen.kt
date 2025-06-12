@@ -1,6 +1,5 @@
 package kelompok4.uasmobile2.pawscorner.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,12 +9,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,13 +24,12 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
-import kelompok4.uasmobile2.pawscorner.R
 import kelompok4.uasmobile2.pawscorner.data.CartItem
 
 @Composable
 fun CartScreen(navController: NavController) {
     var cartItems by remember { mutableStateOf<List<CartItem>>(emptyList()) }
-    var subtotal by remember { mutableStateOf(0) }
+    var subtotal by remember { mutableIntStateOf(0) }
     val db = FirebaseFirestore.getInstance()
     val uid = FirebaseAuth.getInstance().currentUser?.uid
 
@@ -41,7 +39,7 @@ fun CartScreen(navController: NavController) {
                 .addSnapshotListener { value, _ ->
                     value?.let {
                         val items = it.documents.mapNotNull { doc ->
-                            val priceStr = doc.getString("price")?.replace(Regex("[^\\d]"), "") ?: "0"
+                            val priceStr = doc.getString("price")?.replace(Regex("\\D"), "") ?: "0"
                             val quantity = doc.getLong("quantity")?.toInt() ?: 1
                             val imageUrl = doc.getString("imageUrl") ?: "" // Ambil imageUrl dari Firestore
 
@@ -76,12 +74,12 @@ fun CartScreen(navController: NavController) {
                         .padding(16.dp)
                         .navigationBarsPadding()
                 ) {
-                    Divider(
-                        color = Color.Black,
-                        thickness = 2.dp,
+                    HorizontalDivider(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp)
+                            .padding(vertical = 8.dp),
+                        thickness = 2.dp,
+                        color = Color.Black
                     )
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("Subtotal")

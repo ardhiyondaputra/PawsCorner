@@ -39,8 +39,8 @@ class MainActivity : ComponentActivity() {
             Log.d(TAG, "Firebase initialized successfully")
 
             // Check Firebase Auth instance
-            val auth = FirebaseAuth.getInstance()
-            Log.d(TAG, "Firebase Auth instance: ${auth != null}")
+            FirebaseAuth.getInstance()
+            Log.d(TAG, "Firebase Auth instance: ${true}")
 
         } catch (e: Exception) {
             Log.e(TAG, "Firebase initialization failed", e)

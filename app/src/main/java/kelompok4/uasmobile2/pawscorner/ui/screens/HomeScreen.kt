@@ -26,14 +26,12 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.google.firebase.firestore.FirebaseFirestore
 import kelompok4.uasmobile2.pawscorner.R
 import kelompok4.uasmobile2.pawscorner.data.Product
-import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
 import kotlinx.coroutines.tasks.await
 
 @SuppressLint("DefaultLocale")
 @Composable
 fun HomeScreen(
-    navController: NavHostController,
-    authViewModel: AuthViewModel
+    navController: NavHostController
 ) {
     var searchText by remember { mutableStateOf("") }
     var selectedItem by remember { mutableStateOf("Home") }
@@ -70,7 +68,7 @@ fun HomeScreen(
                         description = description,
                         documentId = documentId
                     )
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     null
                 }
             }

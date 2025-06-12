@@ -31,7 +31,6 @@ class AuthViewModel : ViewModel() {
     val authState: StateFlow<AuthState> = _authState
 
     private val _currentUser = MutableStateFlow<FirebaseUser?>(null)
-    val currentUser: StateFlow<FirebaseUser?> = _currentUser
 
     private val _userData = MutableStateFlow<UserData?>(null)
     val userData: StateFlow<UserData?> = _userData
@@ -57,11 +56,6 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // Fungsi untuk mendapatkan FirebaseUser saat ini
-    fun getCurrentFirebaseUser(): FirebaseUser? {
-        return auth.currentUser
-    }
-
     // Fungsi untuk memuat data user dari Firestore
     private fun loadUserData(user: FirebaseUser) {
         viewModelScope.launch {
@@ -77,7 +71,7 @@ class AuthViewModel : ViewModel() {
                         username = document.getString("username") ?: "",
                         email = document.getString("email") ?: user.email ?: "",
                         phone = document.getString("phone") ?: "",
-                        emailVerified = document.getBoolean("emailVerified") ?: false
+                        emailVerified = document.getBoolean("emailVerified") == true
                     )
                     _userData.value = userData
                 }
@@ -283,10 +277,6 @@ class AuthViewModel : ViewModel() {
         _userData.value = null
         _authState.value = AuthState.Idle
         Log.d(TAG, "User logged out")
-    }
-
-    fun resetAuthState() {
-        _authState.value = AuthState.Idle
     }
 
     // Fungsi untuk update profil user

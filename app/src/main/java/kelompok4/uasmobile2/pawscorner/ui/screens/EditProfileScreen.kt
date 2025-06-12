@@ -29,7 +29,7 @@ fun EditProfileScreen(
 
     var username by remember { mutableStateOf(userData?.username ?: "") }
     var phone by remember { mutableStateOf(userData?.phone ?: "") }
-    val context = LocalContext.current
+    LocalContext.current
 
     Column(
         modifier = Modifier

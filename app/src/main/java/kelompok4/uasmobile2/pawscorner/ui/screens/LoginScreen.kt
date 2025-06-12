@@ -31,7 +31,6 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var rememberMe by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val authState by authViewModel.authState.collectAsState()

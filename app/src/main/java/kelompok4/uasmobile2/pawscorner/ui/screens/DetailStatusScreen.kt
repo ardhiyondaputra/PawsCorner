@@ -47,7 +47,7 @@ fun DetailStatusScreen(
                         id = doc.id,
                         title = doc.getString("title") ?: "Produk",
                         quantity = doc.getLong("quantity")?.toInt() ?: 1,
-                        price = doc.getString("price")?.replace(Regex("[^\\d]"), "")?.toIntOrNull() ?: 0,
+                        price = doc.getString("price")?.replace(Regex("\\D"), "")?.toIntOrNull() ?: 0,
                         status = doc.getString("status") ?: "Diproses"
                     )
                     isLoading = false

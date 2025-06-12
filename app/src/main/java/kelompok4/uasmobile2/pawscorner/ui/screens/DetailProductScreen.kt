@@ -1,7 +1,6 @@
 package kelompok4.uasmobile2.pawscorner.ui.screens
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -108,7 +106,7 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                                 "title" to product.title,
                                 "price" to product.price,
                                 "imageUrl" to product.imageUrl, // Perbarui ke imageUrl
-                                "stock" to 1,
+                                "quantity" to 1,
                                 "primary" to false
                             )
 
@@ -163,7 +161,33 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                 }
 
                 Button(
-                    onClick = { navController.navigate("payment/orders") },
+                    onClick = {
+                        val auth = FirebaseAuth.getInstance()
+                        val firestore = FirebaseFirestore.getInstance()
+                        val uid = auth.currentUser?.uid
+
+                        if (uid != null) {
+                            val orderItem = hashMapOf(
+                                "productId" to product.documentId,
+                                "title" to product.title,
+                                "price" to product.price,
+                                "imageUrl" to product.imageUrl,
+                                "quantity" to 1,
+                                "primary" to true,
+                                "timestamp" to System.currentTimeMillis()
+                            )
+
+                            // Tambahkan ke koleksi orders user
+                            firestore.collection("users")
+                                .document(uid)
+                                .collection("orders")
+                                .add(orderItem)
+                                .addOnSuccessListener {
+                                    // Navigasi ke PaymentScreen dengan ID order sebagai parameter
+                                    navController.navigate("payment/oneOrder")
+                                }
+                        }
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .height(56.dp),
