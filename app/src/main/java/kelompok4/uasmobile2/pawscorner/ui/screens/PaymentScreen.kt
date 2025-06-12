@@ -243,17 +243,32 @@ fun PaymentScreen(
                         return@Button
                     }
 
-                    uid?.let {
-                        firestore.collection("users").document(it).collection("orders")
-                            .whereEqualTo("primary", true)
+                    uid?.let { userId ->
+                        val ordersRef = firestore.collection("users").document(userId).collection("orders")
+                        val cartRef = firestore.collection("users").document(userId).collection("cart")
+
+                        ordersRef.whereEqualTo("primary", true)
                             .get()
                             .addOnSuccessListener { snapshot ->
                                 for (doc in snapshot.documents) {
                                     doc.reference.update("primary", false)
                                 }
-                                navController.navigate("payment_success_screen") {
-                                    popUpTo("payment_screen") { inclusive = true }
-                                }
+
+                                // Hapus semua item dari cart
+                                cartRef.get()
+                                    .addOnSuccessListener { cartSnapshot ->
+                                        for (cartDoc in cartSnapshot.documents) {
+                                            cartDoc.reference.delete()
+                                        }
+
+                                        // Navigasi ke halaman sukses setelah cart dihapus
+                                        navController.navigate("payment_success_screen") {
+                                            popUpTo("payment_screen") { inclusive = true }
+                                        }
+                                    }
+                                    .addOnFailureListener {
+                                        uploadStatus = "Gagal menghapus keranjang."
+                                    }
                             }
                             .addOnFailureListener {
                                 uploadStatus = "Gagal mengupdate pesanan."
