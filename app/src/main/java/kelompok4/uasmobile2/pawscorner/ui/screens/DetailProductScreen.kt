@@ -53,7 +53,7 @@ fun DetailProductScreen(documentId: String, navController: NavHostController) {
                     price = doc.getLong("price")?.let {
                         "Rp ${String.format("%,d", it).replace(',', '.')}"
                     } ?: "",
-                    quantity = doc.getLong("quantity")?.toInt() ?: 1,
+                    stock = doc.getLong("stock")?.toInt() ?: 1,
                     description = doc.getString("description") ?: "",
                     imageUrl = imageUrl,
                     documentId = documentId
@@ -108,7 +108,7 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                                 "title" to product.title,
                                 "price" to product.price,
                                 "imageUrl" to product.imageUrl, // Perbarui ke imageUrl
-                                "quantity" to 1,
+                                "stock" to 1,
                                 "primary" to false
                             )
 
@@ -231,6 +231,7 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(text = "Kategori: ${product.category}", color = Color.Gray, fontSize = 14.sp)
                 Text(text = "Berat: ${product.weight}", color = Color.Gray, fontSize = 14.sp)
+                Text(text = "Stock: ${product.stock}", color = Color.Gray, fontSize = 14.sp)
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = product.price,

@@ -55,7 +55,7 @@ fun HomeScreen(
                     val price = document.getLong("price")?.let {
                         "Rp ${String.format("%,d", it).replace(',', '.')}"
                     } ?: ""
-                    val quantity = document.getLong("quantity")?.toInt() ?: 0
+                    val stock = document.getLong("stock")?.toInt() ?: 0
                     val description = document.getString("description") ?: ""
                     val documentId = document.id
                     val imageUrl = document.getString("imageUrl") ?: ""
@@ -66,7 +66,7 @@ fun HomeScreen(
                         category = category,
                         imageUrl = imageUrl,
                         price = price,
-                        quantity = quantity,
+                        stock = stock,
                         description = description,
                         documentId = documentId
                     )

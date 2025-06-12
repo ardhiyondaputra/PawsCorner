@@ -10,7 +10,7 @@ data class Product(
     val category: String,
     val imageUrl: String,
     val price: String,
-    val quantity : Int,
+    val stock : Int,
     val description: String? = null,
     val documentId: String = ""
 ) : Parcelable
