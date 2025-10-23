@@ -23,35 +23,42 @@ fun ProfileScreen(
     navController: NavHostController,
     authViewModel: AuthViewModel
 ) {
-    // Ambil data user dari AuthViewModel
     val userData by authViewModel.userData.collectAsState()
+
+    // 🔹 Tambahkan state untuk selected item (biar seragam kayak HomeScreen)
+    var selectedItem by remember { mutableStateOf("Profil") }
 
     Scaffold(
         bottomBar = {
             NavigationBar(containerColor = Color.White) {
-                val items = listOf("Home", "Notif", "Profil")
+                val items = listOf("Home", "History", "Profil")
                 val icons = listOf(R.drawable.home, R.drawable.bell, R.drawable.user)
 
                 items.forEachIndexed { index, item ->
                     NavigationBarItem(
-                        selected = item == "Profil",
+                        selected = selectedItem == item,
                         onClick = {
+                            selectedItem = item
                             when (item) {
-                                "Home" -> navController.navigate("home")
-                                "Notif" -> navController.navigate("notification")
-                                "Profil" -> navController.navigate("profile")
+                                "Home" -> navController.navigate("home") {
+                                    popUpTo("home") { inclusive = true }
+                                }
+                                "History" -> navController.navigate("notification") {
+                                    popUpTo("home")
+                                }
+                                "Profil" -> navController.navigate("profile") {
+                                    popUpTo("home")
+                                }
                             }
                         },
                         icon = {
                             Icon(
                                 painter = painterResource(id = icons[index]),
                                 contentDescription = item,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(32.dp)
                             )
                         },
-                        label = {
-                            Text(text = item, fontSize = 10.sp)
-                        }
+                        label = { Text(text = item, fontSize = 13.sp) }
                     )
                 }
             }
@@ -136,7 +143,7 @@ fun ProfileScreen(
             ) {
                 authViewModel.logout()
                 navController.navigate("login") {
-                    popUpTo(0) // Clear backstack
+                    popUpTo(0)
                 }
             }
         }
