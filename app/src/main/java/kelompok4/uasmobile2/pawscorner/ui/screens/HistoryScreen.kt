@@ -29,6 +29,7 @@ fun HistoryScreen(navController: NavHostController) {
     val auth = FirebaseAuth.getInstance()
     var orders by remember { mutableStateOf<List<Order>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+    var selectedItem by remember { mutableStateOf("Notif") }
 
     // 🔹 Ambil data order dari Firestore
     LaunchedEffect(Unit) {
@@ -65,40 +66,69 @@ fun HistoryScreen(navController: NavHostController) {
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        "Riwayat Pesanan",
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
+                    // 🔹 Teks History ditengah
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "History",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                            color = Color.Black // 🔹 Ubah jadi hitam
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF6A76AB)
+                    containerColor = Color(0xFFE6F5EA) // 🔹 Hapus background biru, ubah jadi putih
                 )
             )
         },
         bottomBar = {
             NavigationBar(containerColor = Color.White) {
-                val items = listOf("Home", "Notif", "Profil")
+                val items = listOf("Home", "History", "Profil")
                 val icons = listOf(R.drawable.home, R.drawable.bell, R.drawable.user)
 
                 items.forEachIndexed { index, item ->
                     NavigationBarItem(
-                        selected = item == "Notif",
+                        selected = selectedItem == item,
                         onClick = {
+                            selectedItem = item
                             when (item) {
-                                "Home" -> navController.navigate("home")
-                                "Notif" -> navController.navigate("notification")
-                                "Profil" -> navController.navigate("profile")
+                                "Home" -> {
+                                    navController.navigate("home") {
+                                        popUpTo("home") { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                }
+                                "History" -> {
+                                    navController.navigate("notification") {
+                                        popUpTo("notification") { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                }
+                                "Profil" -> {
+                                    navController.navigate("profile") {
+                                        popUpTo("profile") { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                }
                             }
                         },
                         icon = {
                             Icon(
                                 painter = painterResource(id = icons[index]),
                                 contentDescription = item,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(32.dp) // ✅ sama kayak di HomeScreen
                             )
                         },
-                        label = { Text(text = item, fontSize = 10.sp) }
+                        label = {
+                            Text(
+                                text = item,
+                                fontSize = 13.sp // ✅ sama juga
+                            )
+                        }
                     )
                 }
             }
@@ -127,12 +157,15 @@ fun HistoryScreen(navController: NavHostController) {
                 }
 
                 else -> {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(top = 24.dp, bottom = 80.dp) // 🔹 Tambah jarak atas & bawah
+                    ) {
                         items(orders) { order ->
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(8.dp)
+                                    .padding(horizontal = 8.dp, vertical = 6.dp)
                                     .clickable {
                                         navController.navigate("detail_status/${order.id}")
                                     },

@@ -110,7 +110,7 @@ fun HomeScreen(
     Scaffold(
         bottomBar = {
             NavigationBar(containerColor = Color.White) {
-                val items = listOf("Home", "Notif", "Profil")
+                val items = listOf("Home", "History", "Profil")
                 val icons = listOf(R.drawable.home, R.drawable.bell, R.drawable.user)
 
                 items.forEachIndexed { index, item ->
@@ -119,7 +119,7 @@ fun HomeScreen(
                         onClick = {
                             selectedItem = item
                             when (item) {
-                                "Notif" -> navController.navigate("notification")
+                                "History" -> navController.navigate("notification")
                                 "Profil" -> navController.navigate("profile")
                             }
                         },
