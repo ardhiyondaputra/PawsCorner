@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,7 +25,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kelompok4.uasmobile2.pawscorner.R
 import kelompok4.uasmobile2.pawscorner.data.Product
-import kelompok4.uasmobile2.pawscorner.ui.components.CustomPopup
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
@@ -82,14 +82,6 @@ fun DetailProductScreen(documentId: String, navController: NavHostController) {
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun DetailProductContent(product: Product, navController: NavHostController) {
-    val coroutineScope = rememberCoroutineScope()
-
-    // 🎯 State untuk Pop-up
-    var showSuccessPopup by remember { mutableStateOf(false) }
-    var showErrorPopup by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf("") }
-    var isAddingToCart by remember { mutableStateOf(false) }
-
     Scaffold(
         bottomBar = {
             Row(
@@ -99,164 +91,107 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                     .padding(bottom = 50.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 🛒 TOMBOL ADD TO CART
+                val coroutineScope = rememberCoroutineScope()
+                var addedToCart by remember { mutableStateOf(false) }
+
                 Button(
                     onClick = {
-                        // Validasi stock
-                        if (product.stock <= 0) {
-                            errorMessage = "Maaf, produk ini sedang habis"
-                            showErrorPopup = true
-                            return@Button
-                        }
-
                         val auth = FirebaseAuth.getInstance()
                         val firestore = FirebaseFirestore.getInstance()
                         val uid = auth.currentUser?.uid
 
-                        if (uid == null) {
-                            errorMessage = "Anda harus login terlebih dahulu"
-                            showErrorPopup = true
-                            return@Button
-                        }
+                        if (uid != null) {
+                            val cartItem = hashMapOf(
+                                "productId" to product.documentId,
+                                "title" to product.title,
+                                "price" to product.price,
+                                "imageUrl" to product.imageUrl, // Perbarui ke imageUrl
+                                "quantity" to 1,
+                                "primary" to false
+                            )
 
-                        isAddingToCart = true
-
-                        // Cek apakah produk sudah ada di cart
-                        firestore.collection("users")
-                            .document(uid)
-                            .collection("cart")
-                            .whereEqualTo("productId", product.documentId)
-                            .get()
-                            .addOnSuccessListener { snapshot ->
-                                if (!snapshot.isEmpty) {
-                                    // Produk sudah ada, update quantity
-                                    val doc = snapshot.documents.first()
-                                    val currentQty = doc.getLong("quantity")?.toInt() ?: 1
-
-                                    doc.reference.update("quantity", currentQty + 1)
-                                        .addOnSuccessListener {
-                                            isAddingToCart = false
-                                            showSuccessPopup = true
-                                        }
-                                        .addOnFailureListener { e ->
-                                            isAddingToCart = false
-                                            errorMessage = "Gagal menambahkan: ${e.message}"
-                                            showErrorPopup = true
-                                        }
-                                } else {
-                                    // Produk belum ada, tambahkan baru
-                                    val cartItem = hashMapOf(
-                                        "productId" to product.documentId,
-                                        "title" to product.title,
-                                        "price" to product.price,
-                                        "imageUrl" to product.imageUrl,
-                                        "weight" to product.weight,
-                                        "quantity" to 1,
-                                        "primary" to false
-                                    )
-
-                                    firestore.collection("users")
-                                        .document(uid)
-                                        .collection("cart")
-                                        .add(cartItem)
-                                        .addOnSuccessListener {
-                                            isAddingToCart = false
-                                            showSuccessPopup = true
-                                        }
-                                        .addOnFailureListener { e ->
-                                            isAddingToCart = false
-                                            errorMessage = "Gagal menambahkan: ${e.message}"
-                                            showErrorPopup = true
-                                        }
+                            firestore.collection("users")
+                                .document(uid)
+                                .collection("cart")
+                                .add(cartItem)
+                                .addOnSuccessListener {
+                                    addedToCart = true
+                                    coroutineScope.launch {
+                                        delay(1500)
+                                        addedToCart = false
+                                    }
                                 }
-                            }
-                            .addOnFailureListener { e ->
-                                isAddingToCart = false
-                                errorMessage = "Gagal mengecek cart: ${e.message}"
-                                showErrorPopup = true
-                            }
+                        }
                     },
-                    enabled = !isAddingToCart && product.stock > 0,
                     modifier = Modifier
                         .weight(1f)
                         .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (product.stock > 0) Color(0xFFD0E8FF) else Color.Gray
-                    ),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD0E8FF)),
                     shape = RoundedCornerShape(24.dp)
                 ) {
-                    if (isAddingToCart) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
+                    if (addedToCart) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = Color(0xFF0D47A1),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Ditambahkan",
                             color = Color(0xFF0D47A1),
-                            strokeWidth = 2.dp
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp
                         )
                     } else {
                         Icon(
                             painter = painterResource(id = R.drawable.shopping_cart),
                             contentDescription = null,
-                            tint = if (product.stock > 0) Color(0xFF0D47A1) else Color.White,
+                            tint = Color(0xFF0D47A1),
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = if (product.stock > 0) "Keranjang" else "Stok Habis",
-                            color = if (product.stock > 0) Color(0xFF0D47A1) else Color.White,
+                            text = "Keranjang",
+                            color = Color(0xFF0D47A1),
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 14.sp
                         )
                     }
                 }
 
-                // 💰 TOMBOL BELI SEKARANG
                 Button(
                     onClick = {
-                        // Validasi stock
-                        if (product.stock <= 0) {
-                            errorMessage = "Maaf, produk ini sedang habis"
-                            showErrorPopup = true
-                            return@Button
-                        }
-
                         val auth = FirebaseAuth.getInstance()
                         val firestore = FirebaseFirestore.getInstance()
                         val uid = auth.currentUser?.uid
 
-                        if (uid == null) {
-                            errorMessage = "Anda harus login terlebih dahulu"
-                            showErrorPopup = true
-                            return@Button
+                        if (uid != null) {
+                            val orderItem = hashMapOf(
+                                "productId" to product.documentId,
+                                "title" to product.title,
+                                "price" to product.price,
+                                "imageUrl" to product.imageUrl,
+                                "quantity" to 1,
+                                "primary" to true,
+                                "timestamp" to System.currentTimeMillis()
+                            )
+
+                            // Tambahkan ke koleksi orders user
+                            firestore.collection("users")
+                                .document(uid)
+                                .collection("orders")
+                                .add(orderItem)
+                                .addOnSuccessListener {
+                                    // Navigasi ke PaymentScreen dengan ID order sebagai parameter
+                                    navController.navigate("payment/oneOrder")
+                                }
                         }
-
-                        val orderItem = hashMapOf(
-                            "productId" to product.documentId,
-                            "title" to product.title,
-                            "price" to product.price,
-                            "imageUrl" to product.imageUrl,
-                            "quantity" to 1,
-                            "primary" to true,
-                            "timestamp" to System.currentTimeMillis()
-                        )
-
-                        firestore.collection("users")
-                            .document(uid)
-                            .collection("orders")
-                            .add(orderItem)
-                            .addOnSuccessListener {
-                                navController.navigate("payment/oneOrder")
-                            }
-                            .addOnFailureListener { e ->
-                                errorMessage = "Gagal membuat pesanan: ${e.message}"
-                                showErrorPopup = true
-                            }
                     },
-                    enabled = product.stock > 0,
                     modifier = Modifier
                         .weight(1f)
                         .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (product.stock > 0) Color(0xFF4CAF50) else Color.Gray
-                    ),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
                     shape = RoundedCornerShape(24.dp)
                 ) {
                     Icon(
@@ -320,22 +255,7 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(text = "Kategori: ${product.category}", color = Color.Gray, fontSize = 14.sp)
                 Text(text = "Berat: ${product.weight}", color = Color.Gray, fontSize = 14.sp)
-
-                // Stock indicator dengan warna
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "Stock: ", color = Color.Gray, fontSize = 14.sp)
-                    Text(
-                        text = "${product.stock}",
-                        color = when {
-                            product.stock == 0 -> Color.Red
-                            product.stock < 10 -> Color(0xFFFF9800)
-                            else -> Color(0xFF4CAF50)
-                        },
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
+                Text(text = "Stock: ${product.stock}", color = Color.Gray, fontSize = 14.sp)
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = product.price,
@@ -349,49 +269,5 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
-    }
-
-    // 🎉 POP-UP SUCCESS - Auto redirect ke Home
-    if (showSuccessPopup) {
-        CustomPopup(
-            title = "Berhasil!",
-            message = "Produk berhasil ditambahkan ke keranjang",
-            confirmText = "OK",
-            onDismiss = {
-                showSuccessPopup = false
-                // Auto redirect ke home setelah popup ditutup
-                navController.navigate("home") {
-                    popUpTo("home") { inclusive = true }
-                }
-            },
-            onConfirm = {
-                showSuccessPopup = false
-                // Auto redirect ke home
-                navController.navigate("home") {
-                    popUpTo("home") { inclusive = true }
-                }
-            },
-            isError = false
-        )
-
-        // 🕐 Auto redirect setelah 2 detik
-        LaunchedEffect(Unit) {
-            delay(2000)
-            showSuccessPopup = false
-            navController.navigate("home") {
-                popUpTo("home") { inclusive = true }
-            }
-        }
-    }
-
-    // ❌ POP-UP ERROR
-    if (showErrorPopup) {
-        CustomPopup(
-            title = "Gagal",
-            message = errorMessage,
-            confirmText = "OK",
-            onDismiss = { showErrorPopup = false },
-            isError = true
-        )
     }
 }
