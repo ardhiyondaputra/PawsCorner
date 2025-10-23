@@ -21,11 +21,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kelompok4.uasmobile2.pawscorner.R
 import kelompok4.uasmobile2.pawscorner.data.Product
+import kelompok4.uasmobile2.pawscorner.ui.components.CustomInputField
+import kelompok4.uasmobile2.pawscorner.ui.components.ProductCard
 import kotlinx.coroutines.tasks.await
 
 @SuppressLint("DefaultLocale")
@@ -41,6 +42,10 @@ fun HomeScreen(
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
 
+    // 🛒 State untuk cart count
+    var cartItemCount by remember { mutableIntStateOf(0) }
+
+    // 🔥 Load data dari Firebase
     LaunchedEffect(Unit) {
         try {
             val firestore = FirebaseFirestore.getInstance()
@@ -80,6 +85,24 @@ fun HomeScreen(
         }
     }
 
+    // 🛒 Real-time listener untuk cart count (TOTAL QUANTITY)
+    DisposableEffect(Unit) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        val listener = uid?.let {
+            FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(it)
+                .collection("cart")
+                .addSnapshotListener { snapshot, _ ->
+                    // ✅ Hitung total quantity, bukan jumlah document
+                    cartItemCount = snapshot?.documents?.sumOf { doc ->
+                        doc.getLong("quantity")?.toInt() ?: 0
+                    } ?: 0
+                }
+        }
+        onDispose { listener?.remove() }
+    }
+
     val filteredProducts = products.filter {
         it.category == selectedCategory && it.title.contains(searchText, ignoreCase = true)
     }
@@ -104,47 +127,52 @@ fun HomeScreen(
                             Icon(
                                 painter = painterResource(id = icons[index]),
                                 contentDescription = item,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(32.dp)
                             )
                         },
-                        label = { Text(text = item, fontSize = 10.sp) }
+                        label = { Text(text = item, fontSize = 13.sp) }
                     )
                 }
             }
         }
     ) { paddingValues ->
-        if (selectedItem == "Profil") {
-            ProfileScreen()
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                HeaderSection(searchText, { searchText = it }, navController)
-                CategorySection(selectedCategory) { selectedCategory = it }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            // 🛒 Pass cartItemCount ke HeaderSection
+            HeaderSection(searchText, { searchText = it }, navController, cartItemCount)
+            CategorySection(selectedCategory) { selectedCategory = it }
 
-                when {
-                    isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
-                    error != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(text = error!!, color = Color.Red)
-                    }
-                    filteredProducts.isEmpty() -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Tidak ada produk ditemukan.")
-                    }
-                    else -> RecommendedSection(filteredProducts, navController)
+            when {
+                isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
-
-                Spacer(modifier = Modifier.height(60.dp))
+                error != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(text = error!!, color = Color.Red)
+                }
+                filteredProducts.isEmpty() -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Tidak ada produk ditemukan.")
+                }
+                else -> RecommendedSection(filteredProducts, navController)
             }
+
+            Spacer(modifier = Modifier.height(60.dp))
         }
     }
 }
 
+// ===============================
+// Header dengan Cart Badge
+// ===============================
 @Composable
-fun HeaderSection(searchText: String, onSearchChange: (String) -> Unit, navController: NavController) {
+fun HeaderSection(
+    searchText: String,
+    onSearchChange: (String) -> Unit,
+    navController: NavController,
+    cartItemCount: Int // ← TAMBAHKAN PARAMETER INI
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -159,22 +187,40 @@ fun HeaderSection(searchText: String, onSearchChange: (String) -> Unit, navContr
             Image(
                 painter = painterResource(id = R.drawable.paws_corner_removebg_preview),
                 contentDescription = "Logo",
-                modifier = Modifier
-                    .size(120.dp)
-                    .height(25.dp)
-                    .padding(end = 2.dp)
+                modifier = Modifier.size(120.dp)
             )
-            Row(verticalAlignment = Alignment.CenterVertically) {
+
+            // 🛒 Cart Icon dengan Badge
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clickable { navController.navigate("cart") }
+            ) {
                 Icon(
                     painter = painterResource(id = R.drawable.shopping_cart),
                     contentDescription = "Cart",
                     modifier = Modifier
-                        .size(30.dp)
-                        .padding(end = 12.dp)
-                        .clickable {
-                            navController.navigate("cart")
-                        }
+                        .size(32.dp)
+                        .align(Alignment.Center)
                 )
+
+                // 🔴 Badge Counter
+                if (cartItemCount > 0) {
+                    Box(
+                        modifier = Modifier
+                            .size(20.dp)
+                            .align(Alignment.TopEnd)
+                            .background(Color.Red, shape = CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = if (cartItemCount > 99) "99+" else cartItemCount.toString(),
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
         }
 
@@ -189,31 +235,25 @@ fun HeaderSection(searchText: String, onSearchChange: (String) -> Unit, navContr
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        TextField(
+        CustomInputField(
             value = searchText,
             onValueChange = onSearchChange,
-            placeholder = { Text("Search", fontSize = 18.sp) },
-            leadingIcon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.search__1_),
-                    contentDescription = "Search",
-                    modifier = Modifier.size(24.dp)
-                )
-            },
+            placeholder = "Search",
+            leadingIcon = R.drawable.search__1_,
             trailingIcon = {
                 Icon(
                     painter = painterResource(id = R.drawable.objects_column),
                     contentDescription = "Filter",
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(20.dp)
                 )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = 56.dp)
+            }
         )
     }
 }
 
+// ===============================
+// Kategori tetap sama
+// ===============================
 @Composable
 fun CategorySection(selectedCategory: String, onCategorySelected: (String) -> Unit) {
     val categories = listOf(
@@ -241,15 +281,17 @@ fun CategorySection(selectedCategory: String, onCategorySelected: (String) -> Un
                 Icon(
                     painter = painterResource(id = iconRes),
                     contentDescription = name,
-                    modifier = Modifier.size(30.dp)
+                    modifier = Modifier.size(32.dp)
                 )
-                Text(text = name, fontSize = 10.sp)
+                Text(text = name, fontSize = 13.sp)
             }
         }
     }
 }
 
-@OptIn(ExperimentalGlideComposeApi::class)
+// ===============================
+// Grid Produk pakai ProductCard
+// ===============================
 @Composable
 fun RecommendedSection(products: List<Product>, navController: NavHostController) {
     Text(
@@ -267,42 +309,10 @@ fun RecommendedSection(products: List<Product>, navController: NavHostController
         modifier = Modifier.fillMaxSize()
     ) {
         items(products) { product ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp)
-                    .clickable {
-                        navController.navigate("detail/${product.documentId}")
-                    },
-                elevation = CardDefaults.cardElevation(4.dp)
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(8.dp),
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        GlideImage(
-                            model = product.imageUrl,
-                            contentDescription = product.title,
-                            modifier = Modifier.size(80.dp)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(product.title, fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 2)
-                        Text(product.weight, fontSize = 11.sp, color = Color.Gray)
-                        Text(product.price, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF388E3C))
-                    }
-                }
-            }
+            ProductCard(
+                product = product,
+                onClick = { navController.navigate("detail/${product.documentId}") }
+            )
         }
-    }
-}
-
-@Composable
-fun ProfileScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Profile")
     }
 }

@@ -22,6 +22,9 @@ import androidx.navigation.NavHostController
 import kelompok4.uasmobile2.pawscorner.R
 import kelompok4.uasmobile2.pawscorner.viewmodel.AuthState
 import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
+import kelompok4.uasmobile2.pawscorner.ui.components.CustomInputField
+import kelompok4.uasmobile2.pawscorner.ui.components.CustomPopup
+import kelompok4.uasmobile2.pawscorner.ui.components.PrimaryButton
 
 @Composable
 fun LoginScreen(
@@ -32,9 +35,13 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    // 🔸 State untuk Popup
+    var showErrorPopup by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+
     val authState by authViewModel.authState.collectAsState()
 
+    // 🔸 SMART INDONESIAN ERROR MESSAGES (FIXED)
     LaunchedEffect(authState) {
         when (authState) {
             is AuthState.Success -> {
@@ -43,18 +50,34 @@ fun LoginScreen(
                 }
             }
             is AuthState.Error -> {
-                snackbarHostState.showSnackbar((authState as AuthState.Error).message)
+                val errorMsg = (authState as AuthState.Error).message.lowercase()
+                errorMessage = when {
+                    // ❌ SALAH PASSWORD/EMAIL
+                    errorMsg.contains("credential") ||
+                            errorMsg.contains("password") ||
+                            errorMsg.contains("incorrect") ->
+                        "Email atau password salah"
+
+                    // ❌ AKUN BELUM TERDAFTAR
+                    errorMsg.contains("user-not-found") ||
+                            errorMsg.contains("user not found") ||
+                            errorMsg.contains("no user") ->
+                        "Akun belum terdaftar"
+
+                    // ❌ DEFAULT
+                    else -> "Terjadi kesalahan. Coba lagi"
+                }
+                showErrorPopup = true
             }
             is AuthState.EmailNotVerified -> {
-                snackbarHostState.showSnackbar("Email belum diverifikasi. Silakan cek email Anda.")
+                errorMessage = "Email belum diverifikasi. Silakan cek email Anda."
+                showErrorPopup = true
             }
             else -> {}
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-    ) { padding ->
+    Scaffold { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -71,37 +94,49 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text("Masuk", fontSize = 28.sp, fontWeight = FontWeight.Bold)
+            Text(
+                text = "Masuk",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold
+            )
             Spacer(modifier = Modifier.height(8.dp))
-            Text("Masukkan Email dan Password Anda", fontSize = 14.sp, color = Color.Gray)
+            Text(
+                text = "Masukkan Email dan Password Anda",
+                fontSize = 14.sp,
+                color = Color.Gray
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            OutlinedTextField(
+            CustomInputField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") },
-                singleLine = true,
+                placeholder = "Email",
                 modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            OutlinedTextField(
+            CustomInputField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password") },
-                singleLine = true,
+                placeholder = "Password",
                 modifier = Modifier.fillMaxWidth(),
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
-                            imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                            contentDescription = if (passwordVisible) "Sembunyikan Password" else "Tampilkan Password"
+                            imageVector = if (passwordVisible)
+                                Icons.Default.Visibility
+                            else Icons.Default.VisibilityOff,
+                            contentDescription = if (passwordVisible)
+                                "Sembunyikan Password"
+                            else "Tampilkan Password"
                         )
                     }
-                }
+                },
+                visualTransformation = if (passwordVisible)
+                    VisualTransformation.None
+                else PasswordVisualTransformation()
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -112,36 +147,30 @@ fun LoginScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 ClickableText(
-                    text = AnnotatedString("Lupa Kata Sandi ?"),
+                    text = AnnotatedString("Lupa Kata Sandi?"),
                     onClick = { navController.navigate("forgot_password") },
                     style = LocalTextStyle.current.copy(color = Color(0xFF2D5FFF))
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            Button(
+            PrimaryButton(
+                text = "Masuk",
                 onClick = {
                     authViewModel.login(email, password)
                 },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5DD39E))
-            ) {
-                Text("Masuk", color = Color.White)
-            }
+                enabled = email.isNotBlank() && password.isNotBlank()
+            )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Text("Atau", color = Color.Gray)
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Google & Facebook Buttons (tidak diubah)
-            Spacer(modifier = Modifier.height(16.dp))
-
             Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
-                Text("Belum punya akun?")
-                Spacer(modifier = Modifier.width(4.dp))
+                Text("Belum punya akun? ")
                 ClickableText(
                     text = AnnotatedString("Daftar"),
                     onClick = { navController.navigate("register") },
@@ -149,5 +178,17 @@ fun LoginScreen(
                 )
             }
         }
+    }
+
+    // 🔸 CUSTOM INDONESIAN POPUP
+    if (showErrorPopup) {
+        CustomPopup(
+            title = "Login Gagal",
+            message = errorMessage,
+            onDismiss = { showErrorPopup = false },
+            onConfirm = { showErrorPopup = false },
+            confirmText = "Coba Lagi",
+            dismissText = "Tutup"
+        )
     }
 }

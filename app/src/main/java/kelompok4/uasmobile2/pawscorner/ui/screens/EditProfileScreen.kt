@@ -4,21 +4,22 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import kelompok4.uasmobile2.pawscorner.R
+import kelompok4.uasmobile2.pawscorner.ui.components.CustomInputField
+import kelompok4.uasmobile2.pawscorner.ui.components.CustomPopup
+import kelompok4.uasmobile2.pawscorner.ui.components.PrimaryButton
 import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun EditProfileScreen(
@@ -26,10 +27,22 @@ fun EditProfileScreen(
     authViewModel: AuthViewModel
 ) {
     val userData by authViewModel.userData.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
 
     var username by remember { mutableStateOf(userData?.username ?: "") }
     var phone by remember { mutableStateOf(userData?.phone ?: "") }
-    LocalContext.current
+
+    // 🎯 State untuk popup dan loading
+    var showSuccessPopup by remember { mutableStateOf(false) }
+    var showErrorPopup by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+
+    // Update state saat userData berubah
+    LaunchedEffect(userData) {
+        username = userData?.username ?: ""
+        phone = userData?.phone ?: ""
+    }
 
     Column(
         modifier = Modifier
@@ -39,7 +52,7 @@ fun EditProfileScreen(
     ) {
         Spacer(modifier = Modifier.height(35.dp))
 
-        // Header
+        // ========== HEADER ==========
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -61,38 +74,125 @@ fun EditProfileScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        OutlinedTextField(
+        // ========== CUSTOM INPUT FIELD - USERNAME ==========
+        CustomInputField(
             value = username,
             onValueChange = { username = it },
-            label = { Text("Nama Pengguna", color = Color.Black) },
-            textStyle = LocalTextStyle.current.copy(color = Color.Black),
+            placeholder = "Nama Pengguna",
+            leadingIcon = R.drawable.user, // Ganti dengan icon yang sesuai
             modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        OutlinedTextField(
+        // ========== CUSTOM INPUT FIELD - PHONE ==========
+        CustomInputField(
             value = phone,
-            onValueChange = { phone = it },
-            label = { Text("Nomor Telepon", color = Color.Black) },
-            textStyle = LocalTextStyle.current.copy(color = Color.Black),
+            onValueChange = {
+                // Validasi hanya angka
+                if (it.all { char -> char.isDigit() } || it.isEmpty()) {
+                    phone = it
+                }
+            },
+            placeholder = "Nomor Telepon",
+            leadingIcon = R.drawable.bell, // Ganti dengan icon phone yang sesuai
             modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        Button(
+        // ========== PRIMARY BUTTON ==========
+        PrimaryButton(
+            text = "Update Profile",
             onClick = {
-                authViewModel.updateUserProfile(username, phone)
-                navController.popBackStack()
+                // Validasi input
+                when {
+                    username.isBlank() -> {
+                        errorMessage = "Nama pengguna tidak boleh kosong"
+                        showErrorPopup = true
+                    }
+                    username.length < 3 -> {
+                        errorMessage = "Nama pengguna minimal 3 karakter"
+                        showErrorPopup = true
+                    }
+                    phone.isBlank() -> {
+                        errorMessage = "Nomor telepon tidak boleh kosong"
+                        showErrorPopup = true
+                    }
+                    phone.length < 10 -> {
+                        errorMessage = "Nomor telepon minimal 10 digit"
+                        showErrorPopup = true
+                    }
+                    else -> {
+                        // Update profile
+                        isLoading = true
+                        coroutineScope.launch {
+                            try {
+                                authViewModel.updateUserProfile(username, phone)
+                                delay(500) // Simulasi delay untuk smooth UX
+                                isLoading = false
+                                showSuccessPopup = true
+                            } catch (e: Exception) {
+                                isLoading = false
+                                errorMessage = "Gagal update profil: ${e.message}"
+                                showErrorPopup = true
+                            }
+                        }
+                    }
+                }
             },
-            shape = MaterialTheme.shapes.medium,
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6A76AB)),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-        ) {
-            Text("Update Profile", color = Color.White)
+            enabled = !isLoading,
+            isLoading = isLoading,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Info helper text
+        if (!isLoading) {
+            Text(
+                text = "Pastikan data yang Anda masukkan sudah benar",
+                fontSize = 12.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
         }
     }
+
+    // ========== POP-UP SUCCESS ==========
+    if (showSuccessPopup) {
+        CustomPopup(
+            title = "Berhasil!",
+            message = "Profil Anda berhasil diperbarui",
+            confirmText = "OK",
+            onDismiss = {
+                showSuccessPopup = false
+                navController.popBackStack()
+            },
+            onConfirm = {
+                showSuccessPopup = false
+                navController.popBackStack()
+            },
+            isError = false
+        )
+
+        // Auto dismiss dan kembali setelah 2 detik
+        LaunchedEffect(Unit) {
+            delay(2000)
+            showSuccessPopup = false
+            navController.popBackStack()
+        }
+    }
+
+    // ========== POP-UP ERROR ==========
+    if (showErrorPopup) {
+        CustomPopup(
+            title = "Gagal",
+            message = errorMessage,
+            confirmText = "OK",
+            onDismiss = { showErrorPopup = false },
+            isError = true
+        )
+    }
+
 }

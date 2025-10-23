@@ -3,7 +3,6 @@ package kelompok4.uasmobile2.pawscorner.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -14,15 +13,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kelompok4.uasmobile2.pawscorner.R
 import kelompok4.uasmobile2.pawscorner.viewmodel.AuthState
 import kelompok4.uasmobile2.pawscorner.viewmodel.AuthViewModel
+import kelompok4.uasmobile2.pawscorner.ui.components.CustomInputField
+import kelompok4.uasmobile2.pawscorner.ui.components.PrimaryButton
 
 @Composable
 fun RegisterScreen(navController: NavController, authViewModel: AuthViewModel) {
@@ -33,27 +31,27 @@ fun RegisterScreen(navController: NavController, authViewModel: AuthViewModel) {
     var passwordVisible by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
 
+    // State untuk validasi
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+
     val snackbarHostState = remember { SnackbarHostState() }
     val authState by authViewModel.authState.collectAsState()
 
     LaunchedEffect(authState) {
         when (authState) {
-            is AuthState.Loading -> {
-                isLoading = true
-            }
+            is AuthState.Loading -> isLoading = true
             is AuthState.EmailVerificationSent -> {
                 isLoading = false
                 snackbarHostState.showSnackbar(
-                    "Email verifikasi telah dikirim ke $email. Silakan cek email Anda dan klik link verifikasi."
+                    "Email verifikasi telah dikirim ke $email. Silakan cek email Anda."
                 )
-                // Navigate to email verification screen
                 navController.navigate("email_verification/$email") {
                     popUpTo("register") { inclusive = false }
                 }
             }
             is AuthState.Success -> {
                 isLoading = false
-                // User berhasil register dan email sudah terverifikasi
                 snackbarHostState.showSnackbar("Registrasi berhasil! Silakan login.")
                 navController.navigate("login") {
                     popUpTo("register") { inclusive = true }
@@ -63,15 +61,11 @@ fun RegisterScreen(navController: NavController, authViewModel: AuthViewModel) {
                 isLoading = false
                 snackbarHostState.showSnackbar((authState as AuthState.Error).message)
             }
-            else -> {
-                isLoading = false
-            }
+            else -> isLoading = false
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { padding ->
+    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -94,62 +88,83 @@ fun RegisterScreen(navController: NavController, authViewModel: AuthViewModel) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            OutlinedTextField(
+            CustomInputField(
                 value = username,
                 onValueChange = { username = it },
-                label = { Text("Nama Pengguna") },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading
+                placeholder = "Nama Pengguna",
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            OutlinedTextField(
+            CustomInputField(
                 value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading
+                onValueChange = {
+                    email = it
+                    // Validasi email sederhana
+                    emailError = if (!android.util.Patterns.EMAIL_ADDRESS.matcher(it).matches() && it.isNotEmpty()) {
+                        "Format email tidak sesuai"
+                    } else null
+                },
+                placeholder = "Email",
+                modifier = Modifier.fillMaxWidth()
             )
+            if (emailError != null) {
+                Text(emailError!!, color = Color.Red, fontSize = 12.sp)
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            OutlinedTextField(
+            CustomInputField(
                 value = phone,
                 onValueChange = { phone = it },
-                label = { Text("Nomor Telepon") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading
+                placeholder = "Nomor Telepon",
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            OutlinedTextField(
+            CustomInputField(
                 value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                singleLine = true,
+                onValueChange = {
+                    password = it
+                    // Validasi panjang password
+                    passwordError = if (it.length < 8 && it.isNotEmpty()) {
+                        "Password minimal 8 karakter"
+                    } else null
+                },
+                placeholder = "Password",
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading,
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                            contentDescription = if (passwordVisible) "Sembunyikan Password" else "Tampilkan Password"
+                            contentDescription = if (passwordVisible)
+                                "Sembunyikan Password" else "Tampilkan Password"
                         )
                     }
                 }
             )
+            if (passwordError != null) {
+                Text(passwordError!!, color = Color.Red, fontSize = 12.sp)
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Button(
+            PrimaryButton(
+                text = "Daftar",
                 onClick = {
-                    if (username.isNotBlank() && email.isNotBlank() &&
-                        phone.isNotBlank() && password.isNotBlank()) {
+                    // Validasi sebelum lanjut
+                    emailError = if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                        "Format email tidak sesuai"
+                    } else null
+                    passwordError = if (password.length < 8) {
+                        "Password minimal 8 karakter"
+                    } else null
+
+                    if (username.isNotBlank() && emailError == null && passwordError == null &&
+                        phone.isNotBlank() && password.isNotBlank()
+                    ) {
                         authViewModel.registerWithEmailVerification(
                             email = email,
                             password = password,
@@ -158,28 +173,14 @@ fun RegisterScreen(navController: NavController, authViewModel: AuthViewModel) {
                         )
                     }
                 },
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107)),
-                enabled = !isLoading && username.isNotBlank() && email.isNotBlank() &&
-                        phone.isNotBlank() && password.isNotBlank()
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = Color.White
-                    )
-                } else {
-                    Text("Daftar")
-                }
-            }
+                enabled = !isLoading,
+                isLoading = isLoading
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Text("Atau")
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Google & Facebook Buttons (tidak diubah)
             Spacer(modifier = Modifier.height(16.dp))
 
             Row {
