@@ -12,10 +12,10 @@ import kelompok4.uasmobile2.pawscorner.ui.screens.DetailStatusScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.EditProfileScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.EmailVerificationScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.ForgotPasswordScreen
+import kelompok4.uasmobile2.pawscorner.ui.screens.HistoryScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.LoginScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.RegisterScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.HomeScreen
-import kelompok4.uasmobile2.pawscorner.ui.screens.NotificationScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.OrderStatusScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.PaymentScreen
 import kelompok4.uasmobile2.pawscorner.ui.screens.PaymentSuccessScreen
@@ -86,7 +86,7 @@ fun AppNavGraph(
         }
 
         composable("notification") {
-            NotificationScreen(navController)
+            HistoryScreen(navController)
         }
 
         composable("address") {
