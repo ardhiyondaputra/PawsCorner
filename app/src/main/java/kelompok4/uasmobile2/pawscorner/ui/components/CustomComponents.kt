@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
@@ -17,31 +18,41 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import kelompok4.uasmobile2.pawscorner.data.Product
 
-// ==========================================================
+// =========================================================
 // Custom Input Field — bisa dipakai untuk Search atau Form
-// ==========================================================
+// Mendukung leadingIcon berupa ImageVector (Material Icons) atau Int (Drawable Resource)
 @Composable
 fun CustomInputField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
     modifier: Modifier = Modifier,
-    leadingIcon: Int? = null,
+    leadingIconVector: ImageVector? = null, // ← Untuk Material Icons
+    leadingIconRes: Int? = null, // ← Untuk Drawable Resource
     trailingIcon: @Composable (() -> Unit)? = null,
     isLoading: Boolean = false,
-    visualTransformation: VisualTransformation = VisualTransformation.None // ← TAMBAH INI
+    visualTransformation: VisualTransformation = VisualTransformation.None
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         placeholder = { Text(placeholder, fontSize = 14.sp) },
         leadingIcon = {
-            leadingIcon?.let {
-                Icon(
-                    painter = painterResource(id = it),
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
+            when {
+                leadingIconVector != null -> {
+                    Icon(
+                        imageVector = leadingIconVector,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                leadingIconRes != null -> {
+                    Icon(
+                        painter = painterResource(id = leadingIconRes),
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         },
         trailingIcon = {
@@ -52,7 +63,7 @@ fun CustomInputField(
             .height(56.dp),
         textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
         singleLine = true,
-        visualTransformation = visualTransformation, // ← GUNAKAN INI
+        visualTransformation = visualTransformation,
         colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = Color.White,
             unfocusedContainerColor = Color.White,
@@ -147,6 +158,9 @@ fun ProductCard(
     }
 }
 
+// ==========================================================
+// Custom Popup — untuk menampilkan dialog error/sukses
+// ==========================================================
 @Composable
 fun CustomPopup(
     title: String,
@@ -172,8 +186,8 @@ fun CustomPopup(
                 fontSize = 14.sp,
                 lineHeight = 20.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 3, // ← LIMIT 3 BARIS
-                overflow = TextOverflow.Ellipsis // ← ELLIPSIS KALAU KEGELEMBER
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
             )
         },
         confirmButton = {
@@ -186,7 +200,7 @@ fun CustomPopup(
                 Text(
                     confirmText,
                     color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold, // ← MORE BOLD
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp
                 )
             }
@@ -196,7 +210,7 @@ fun CustomPopup(
                 TextButton(onClick = onDismiss) {
                     Text(
                         it,
-                        color = MaterialTheme.colorScheme.onSurface, // ← LEBIH GELAP
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Medium,
                         fontSize = 14.sp
                     )

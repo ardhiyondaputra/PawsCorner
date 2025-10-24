@@ -171,7 +171,7 @@ fun HeaderSection(
     searchText: String,
     onSearchChange: (String) -> Unit,
     navController: NavController,
-    cartItemCount: Int // ← TAMBAHKAN PARAMETER INI
+    cartItemCount: Int
 ) {
     Column(
         modifier = Modifier
@@ -239,7 +239,7 @@ fun HeaderSection(
             value = searchText,
             onValueChange = onSearchChange,
             placeholder = "Search",
-            leadingIcon = R.drawable.search__1_,
+            leadingIconRes = R.drawable.search__1_, // ← PAKAI leadingIconRes
             trailingIcon = {
                 Icon(
                     painter = painterResource(id = R.drawable.objects_column),

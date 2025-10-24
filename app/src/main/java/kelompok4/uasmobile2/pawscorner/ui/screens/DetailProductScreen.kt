@@ -7,7 +7,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,6 +24,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kelompok4.uasmobile2.pawscorner.R
 import kelompok4.uasmobile2.pawscorner.data.Product
+import kelompok4.uasmobile2.pawscorner.ui.components.CustomPopup
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
@@ -82,6 +82,41 @@ fun DetailProductScreen(documentId: String, navController: NavHostController) {
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun DetailProductContent(product: Product, navController: NavHostController) {
+    val coroutineScope = rememberCoroutineScope()
+
+    // State untuk popup
+    var showPopup by remember { mutableStateOf(false) }
+    var popupTitle by remember { mutableStateOf("") }
+    var popupMessage by remember { mutableStateOf("") }
+    var isError by remember { mutableStateOf(false) }
+    var shouldNavigateToHome by remember { mutableStateOf(false) }
+
+    // Custom Popup
+    if (showPopup) {
+        CustomPopup(
+            title = popupTitle,
+            message = popupMessage,
+            isError = isError,
+            onDismiss = {
+                showPopup = false
+                if (shouldNavigateToHome) {
+                    navController.navigate("home") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                }
+            },
+            onConfirm = {
+                showPopup = false
+                if (shouldNavigateToHome) {
+                    navController.navigate("home") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                }
+            },
+            confirmText = "OK"
+        )
+    }
+
     Scaffold(
         bottomBar = {
             Row(
@@ -91,9 +126,7 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                     .padding(bottom = 50.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                val coroutineScope = rememberCoroutineScope()
-                var addedToCart by remember { mutableStateOf(false) }
-
+                // Tombol Tambah ke Keranjang
                 Button(
                     onClick = {
                         val auth = FirebaseAuth.getInstance()
@@ -105,7 +138,7 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                                 "productId" to product.documentId,
                                 "title" to product.title,
                                 "price" to product.price,
-                                "imageUrl" to product.imageUrl, // Perbarui ke imageUrl
+                                "imageUrl" to product.imageUrl,
                                 "quantity" to 1,
                                 "primary" to false
                             )
@@ -115,12 +148,28 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                                 .collection("cart")
                                 .add(cartItem)
                                 .addOnSuccessListener {
-                                    addedToCart = true
-                                    coroutineScope.launch {
-                                        delay(1500)
-                                        addedToCart = false
-                                    }
+                                    // Tampilkan popup sukses
+                                    popupTitle = "Berhasil"
+                                    popupMessage = "${product.title} berhasil ditambahkan ke keranjang"
+                                    isError = false
+                                    shouldNavigateToHome = true
+                                    showPopup = true
                                 }
+                                .addOnFailureListener { e ->
+                                    // Tampilkan popup error
+                                    popupTitle = "Gagal"
+                                    popupMessage = "Gagal menambahkan ke keranjang: ${e.message}"
+                                    isError = true
+                                    shouldNavigateToHome = false
+                                    showPopup = true
+                                }
+                        } else {
+                            // User belum login
+                            popupTitle = "Perhatian"
+                            popupMessage = "Silakan login terlebih dahulu"
+                            isError = true
+                            shouldNavigateToHome = false
+                            showPopup = true
                         }
                     },
                     modifier = Modifier
@@ -129,37 +178,22 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD0E8FF)),
                     shape = RoundedCornerShape(24.dp)
                 ) {
-                    if (addedToCart) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            tint = Color(0xFF0D47A1),
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Ditambahkan",
-                            color = Color(0xFF0D47A1),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp
-                        )
-                    } else {
-                        Icon(
-                            painter = painterResource(id = R.drawable.shopping_cart),
-                            contentDescription = null,
-                            tint = Color(0xFF0D47A1),
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Keranjang",
-                            color = Color(0xFF0D47A1),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp
-                        )
-                    }
+                    Icon(
+                        painter = painterResource(id = R.drawable.shopping_cart),
+                        contentDescription = null,
+                        tint = Color(0xFF0D47A1),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Keranjang",
+                        color = Color(0xFF0D47A1),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    )
                 }
 
+                // Tombol Beli Sekarang
                 Button(
                     onClick = {
                         val auth = FirebaseAuth.getInstance()
@@ -186,6 +220,21 @@ fun DetailProductContent(product: Product, navController: NavHostController) {
                                     // Navigasi ke PaymentScreen dengan ID order sebagai parameter
                                     navController.navigate("payment/oneOrder")
                                 }
+                                .addOnFailureListener { e ->
+                                    // Tampilkan popup error
+                                    popupTitle = "Gagal"
+                                    popupMessage = "Gagal membuat pesanan: ${e.message}"
+                                    isError = true
+                                    shouldNavigateToHome = false
+                                    showPopup = true
+                                }
+                        } else {
+                            // User belum login
+                            popupTitle = "Perhatian"
+                            popupMessage = "Silakan login terlebih dahulu"
+                            isError = true
+                            shouldNavigateToHome = false
+                            showPopup = true
                         }
                     },
                     modifier = Modifier

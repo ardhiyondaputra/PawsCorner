@@ -3,12 +3,13 @@ package kelompok4.uasmobile2.pawscorner.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,7 +33,7 @@ fun EditProfileScreen(
     var username by remember { mutableStateOf(userData?.username ?: "") }
     var phone by remember { mutableStateOf(userData?.phone ?: "") }
 
-    // 🎯 State untuk popup dan loading
+    // State untuk popup dan loading
     var showSuccessPopup by remember { mutableStateOf(false) }
     var showErrorPopup by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
@@ -79,7 +80,7 @@ fun EditProfileScreen(
             value = username,
             onValueChange = { username = it },
             placeholder = "Nama Pengguna",
-            leadingIcon = R.drawable.user, // Ganti dengan icon yang sesuai
+            leadingIconVector = Icons.Default.Person, // Material Icon
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -95,7 +96,7 @@ fun EditProfileScreen(
                 }
             },
             placeholder = "Nomor Telepon",
-            leadingIcon = R.drawable.bell, // Ganti dengan icon phone yang sesuai
+            leadingIconVector = Icons.Default.Phone, // Material Icon
             modifier = Modifier.fillMaxWidth()
         )
 
