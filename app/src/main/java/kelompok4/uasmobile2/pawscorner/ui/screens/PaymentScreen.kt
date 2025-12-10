@@ -293,7 +293,11 @@ fun PaymentScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                    enabled = imageUri != null && selectedMethod.isNotBlank(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (imageUri != null) Color(0xFF4CAF50) else Color.Gray,
+                        disabledContainerColor = Color.Gray
+                    )
                 ) {
                     Text("Kirim", color = Color.White)
                 }
